@@ -1,0 +1,161 @@
+<!-- ============================================================
+     Shell Dashboard – High-Interactive Demo Layer
+     ============================================================ -->
+
+<!-- Toolbar -->
+<header class="shell-toolbar">
+  <h1 class="shell-title">Displify Shell</h1>
+
+  <div class="toolbar-actions">
+    <span class="layout-badge">{{ currentLayout | uppercase }}</span>
+
+    <button
+      class="btn-reset"
+      *ngIf="currentLayout === 'focus'"
+      (click)="resetLayout()">
+      ← Back to Overview
+    </button>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- ── System Health Dashboard ─────────────── -->
+    <div class="system-health">
+      <span class="health-label">System Health</span>
+
+      <div class="health-indicator" title="KPI App — {{ kpiHealth | uppercase }} (missed {{ kpiMissedPings }})">
+        <span class="health-pulse"
+              [ngClass]="{
+                'pulse-online':     kpiHealth === 'online',
+                'pulse-offline':    kpiHealth === 'offline',
+                'pulse-recovering': kpiHealth === 'recovering'
+              }"></span>
+        <span class="health-name">KPI</span>
+      </div>
+
+      <div class="health-indicator" title="AI App — {{ aiHealth | uppercase }} (missed {{ aiMissedPings }})">
+        <span class="health-pulse"
+              [ngClass]="{
+                'pulse-online':     aiHealth === 'online',
+                'pulse-offline':    aiHealth === 'offline',
+                'pulse-recovering': aiHealth === 'recovering'
+              }"></span>
+        <span class="health-name">AI</span>
+      </div>
+    </div>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Kill button -->
+    <button
+      class="btn-kill"
+      (click)="killApp('KPI_APP')"
+      title="Send KILL signal — KPI App will freeze (while true)">
+      ☠️ Kill KPI App
+    </button>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Crash simulation buttons with status dots -->
+    <button
+      class="btn-restart"
+      (click)="restartApp('KPI_APP')"
+      title="Simulate crash & recovery for KPI App">
+      <span class="status-dot"
+            [ngClass]="{
+              'dot-healthy':    kpiStatus === 'healthy',
+              'dot-crashed':    kpiStatus === 'crashed',
+              'dot-recovering': kpiStatus === 'recovering'
+            }"></span>
+      KPI
+    </button>
+
+    <button
+      class="btn-restart"
+      (click)="restartApp('AI_APP')"
+      title="Simulate crash & recovery for AI App">
+      <span class="status-dot"
+            [ngClass]="{
+              'dot-healthy':    aiStatus === 'healthy',
+              'dot-crashed':    aiStatus === 'crashed',
+              'dot-recovering': aiStatus === 'recovering'
+            }"></span>
+      AI
+    </button>
+  </div>
+</header>
+
+<!-- Animated grid container -->
+<main
+  class="dashboard-grid"
+  [@layoutMorph]="currentLayout"
+  [ngClass]="{
+    'layout-overview': currentLayout === 'overview',
+    'layout-focus':    currentLayout === 'focus'
+  }">
+
+  <!-- KPI Micro-app Panel -->
+  <section
+    class="iframe-wrapper kpi-panel"
+    [@neonPulse]="kpiPulse">
+
+    <div class="panel-header">
+      <span class="status-dot"
+            [ngClass]="{
+              'dot-healthy':    kpiStatus === 'healthy',
+              'dot-crashed':    kpiStatus === 'crashed',
+              'dot-recovering': kpiStatus === 'recovering'
+            }"></span>
+      <span class="panel-title">KPI App</span>
+    </div>
+
+    <iframe
+      #kpiIframe
+      [src]="kpiAppUrl"
+      (load)="onKpiIframeLoad()"
+      title="KPI Application"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+      class="micro-app-frame">
+    </iframe>
+
+    <div class="overlay" *ngIf="!kpiIframeReady">
+      <div class="overlay-content">
+        <span class="spinner" *ngIf="kpiStatus !== 'crashed'"></span>
+        <span *ngIf="kpiStatus === 'crashed'" class="crash-icon">💥</span>
+        <span>{{ kpiStatus === 'crashed' ? 'Crashed — recovering…' : 'Loading KPI App…' }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Insight Micro-app Panel -->
+  <section
+    class="iframe-wrapper ai-panel"
+    [@neonPulse]="aiPulse">
+
+    <div class="panel-header">
+      <span class="status-dot"
+            [ngClass]="{
+              'dot-healthy':    aiStatus === 'healthy',
+              'dot-crashed':    aiStatus === 'crashed',
+              'dot-recovering': aiStatus === 'recovering'
+            }"></span>
+      <span class="panel-title">AI Insight</span>
+    </div>
+
+    <iframe
+      #aiIframe
+      [src]="aiAppUrl"
+      (load)="onAiIframeLoad()"
+      title="AI Insight Application"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+      class="micro-app-frame">
+    </iframe>
+
+    <div class="overlay" *ngIf="!aiIframeReady">
+      <div class="overlay-content">
+        <span class="spinner" *ngIf="aiStatus !== 'crashed'"></span>
+        <span *ngIf="aiStatus === 'crashed'" class="crash-icon">💥</span>
+        <span>{{ aiStatus === 'crashed' ? 'Crashed — recovering…' : 'Loading AI App…' }}</span>
+      </div>
+    </div>
+  </section>
+</main>

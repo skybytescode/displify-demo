@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/styles.scss"],
+  "sourcesContent": ["/* Global Styles */\r\n*,\r\n*::before,\r\n*::after {\r\n  box-sizing: border-box;\r\n  margin: 0;\r\n  padding: 0;\r\n}\r\n\r\nhtml, body {\r\n  height: 100%;\r\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\r\n  background-color: #f4f6f9;\r\n  color: #1e1e2f;\r\n}\r\n"],
+  "mappings": ";AACA;AAAA,CAAA;AAAA,CAAA;AAGE,cAAA;AACA,UAAA;AACA,WAAA;;AAGF;AAAA;AACE,UAAA;AACA;IAAA,UAAA;IAAA,MAAA;IAAA,MAAA;IAAA,OAAA;IAAA;AACA,oBAAA;AACA,SAAA;;",
+  "names": []
+}

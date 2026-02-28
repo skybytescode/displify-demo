@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Insight App</title>
+  <style>
+    /* ── Reset & base ─────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f7ff;
+      padding: 20px;
+      color: #1e1e2f;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 3px;
+      background: #fef3c7;
+      color: #92400e;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Ticker / waiting state ───────────────── */
+    .waiting {
+      text-align: center;
+      padding: 40px 16px;
+      color: #94a3b8;
+    }
+
+    .waiting .icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      animation: floatPulse 2s ease-in-out infinite;
+    }
+
+    .waiting p {
+      font-size: 0.85rem;
+    }
+
+    @keyframes floatPulse {
+      0%, 100% { transform: translateY(0); opacity: 0.7; }
+      50%      { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ── Insight card ─────────────────────────── */
+    .insight-card {
+      display: none;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .insight-card.visible {
+      display: block;
+      animation: slideUp 350ms ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .insight-card .kpi-id {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6366f1;
+      margin-bottom: 6px;
+    }
+
+    .insight-card h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1e1e2f;
+    }
+
+    .insight-card .summary {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #475569;
+      margin-bottom: 16px;
+      min-height: 80px;
+    }
+
+    /* Blinking cursor for typewriter effect */
+    .typewriter-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: #6366f1;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 600ms step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+
+    .insight-card .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .insight-card .tag {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: tagPop 300ms ease forwards;
+    }
+
+    @keyframes tagPop {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Log area ─────────────────────────────── */
+    .log-area {
+      margin-top: 20px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 0.75rem;
+      color: #64748b;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .log-area .entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* ── Crash button ─────────────────────────── */
+    .footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-crash {
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      background: #ef4444;
+      color: #fff;
+      cursor: pointer;
+      transition: background 200ms ease;
+    }
+
+    .btn-crash:hover {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🤖 AI Insights</h1>
+    <span class="badge">MICRO-APP</span>
+  </div>
+
+  <!-- Shown while waiting for data -->
+  <div id="waiting" class="waiting">
+    <div class="icon">📡</div>
+    <p>Listening for KPI selection from the Shell…</p>
+  </div>
+
+  <!-- Rendered when insight data arrives -->
+  <div id="insightCard" class="insight-card">
+    <div class="kpi-id" id="insightId"></div>
+    <h2 id="insightTitle"></h2>
+    <div class="summary" id="insightSummary"></div>
+    <div class="tags" id="insightTags"></div>
+  </div>
+
+  <div id="logArea" class="log-area">
+    <em>Event log</em>
+  </div>
+
+  <div class="footer">
+    <button class="btn-crash" onclick="simulateCrash()">💥 Simulate Crash</button>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    //  Local insight data keyed by KPI id
+    // ─────────────────────────────────────────────
+    const insightsDB = {
+      sme: {
+        title: 'SME Score Analysis',
+        summary:
+          'The SME score of 94% is well above the industry benchmark of 78%. ' +
+          'Key drivers include strong product-market fit in the mid-tier segment ' +
+          'and a 12% improvement in customer onboarding NPS over the last quarter. ' +
+          'Recommendation: maintain current strategy and explore upsell opportunities.',
+        tags: ['High Performer', 'NPS Up', 'Q4 Trend'],
+      },
+      revenue: {
+        title: 'Revenue Breakdown',
+        summary:
+          'Total revenue stands at $1.2M, representing a 9% QoQ increase. ' +
+          'Subscription revenue accounts for 68%, while services contribute 32%. ' +
+          'Enterprise deals grew by 15%, offsetting a slight dip in SMB renewals. ' +
+          'Recommendation: focus retention campaigns on the SMB cohort.',
+        tags: ['Growth', 'Enterprise Strong', 'SMB Watch'],
+      },
+      churn: {
+        title: 'Churn Rate Insights',
+        summary:
+          'Churn rate of 3.7% is within acceptable range but has ticked up from 3.1% last quarter. ' +
+          'Root cause analysis points to onboarding friction in the self-serve tier. ' +
+          'Cohorts acquired via paid channels show 2× higher 90-day churn. ' +
+          'Recommendation: A/B test a simplified onboarding flow for self-serve signups.',
+        tags: ['Attention Needed', 'Onboarding', 'Paid Channels'],
+      },
+    };
+
+    // ─────────────────────────────────────────────
+    //  Typewriter engine
+    // ─────────────────────────────────────────────
+    let typewriterTimer = null;
+
+    /**
+     * Animate text character-by-character into the target element.
+     * @param {HTMLElement} el     – Container element.
+     * @param {string}      text   – Full text to type out.
+     * @param {number}      speed  – Ms per character (default 18).
+     * @param {Function}    onDone – Callback when finished.
+     */
+    function typewrite(el, text, speed = 18, onDone) {
+      // Cancel any previous typewriter run.
+      if (typewriterTimer) { clearInterval(typewriterTimer); }
+
+      el.textContent = '';
+
+      // Add blinking cursor
+      const cursor = document.createElement('span');
+      cursor.className = 'typewriter-cursor';
+      el.appendChild(cursor);
+
+      let i = 0;
+      typewriterTimer = setInterval(() => {
+        if (i < text.length) {
+          // Insert text node before the cursor
+          el.insertBefore(document.createTextNode(text[i]), cursor);
+          i++;
+        } else {
+          clearInterval(typewriterTimer);
+          typewriterTimer = null;
+          // Remove cursor after a short pause
+          setTimeout(() => { cursor.remove(); }, 1200);
+          if (onDone) onDone();
+        }
+      }, speed);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Listen for messages from the Shell
+    // ─────────────────────────────────────────────
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (!data || !data.type) return;
+
+      // ── Heartbeat: respond to PING with PONG ──
+      if (data.type === 'PING') {
+        window.parent.postMessage(
+          { type: 'PONG', target: 'SHELL', payload: { app: 'AI_APP', ts: Date.now() } },
+          '*',
+        );
+        return; // silent — don't log PINGs
+      }
+
+      addLog(`📨 ${data.type} from ${data.target ?? 'unknown'}`);
+      console.log('[AI App] Message received:', data);
+
+      if (data.type === 'KPI_SELECTED' || data.type === 'DATA_UPDATE') {
+        const kpiId = data.payload?.id;
+        if (kpiId && insightsDB[kpiId]) {
+          renderInsight(kpiId, insightsDB[kpiId]);
+        }
+      }
+    });
+
+    // ─────────────────────────────────────────────
+    //  Render the insight card (with typewriter)
+    // ─────────────────────────────────────────────
+    function renderInsight(id, insight) {
+      document.getElementById('waiting').style.display = 'none';
+
+      const card = document.getElementById('insightCard');
+      card.classList.remove('visible');
+
+      // Force reflow so the animation re-triggers
+      void card.offsetHeight;
+      card.classList.add('visible');
+
+      document.getElementById('insightId').textContent = 'KPI: ' + id.toUpperCase();
+      document.getElementById('insightTitle').textContent = insight.title;
+
+      // ── Typewriter effect for the summary ──
+      const summaryEl = document.getElementById('insightSummary');
+      typewrite(summaryEl, insight.summary, 16, () => {
+        // After typing finishes, animate the tags in with staggered delays
+        renderTags(insight.tags);
+        addLog('✅ Insight fully rendered for "' + id + '"');
+      });
+    }
+
+    function renderTags(tags) {
+      const tagsContainer = document.getElementById('insightTags');
+      tagsContainer.innerHTML = '';
+      tags.forEach((tag, i) => {
+        const el = document.createElement('span');
+        el.className = 'tag';
+        el.textContent = tag;
+        el.style.animationDelay = (i * 120) + 'ms';
+        tagsContainer.appendChild(el);
+      });
+    }
+
+    // ─────────────────────────────────────────────
+    //  Crash simulation
+    // ─────────────────────────────────────────────
+    function simulateCrash() {
+      addLog('💥 Crashing… (reloading page)');
+
+      window.parent.postMessage(
+        { type: 'CRASH_SIMULATION', target: 'SHELL', payload: { app: 'AI_APP' } },
+        '*',
+      );
+
+      setTimeout(() => location.reload(), 300);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Event log helper
+    // ─────────────────────────────────────────────
+    function addLog(text) {
+      const area = document.getElementById('logArea');
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      const ts = new Date().toLocaleTimeString();
+      entry.textContent = '[' + ts + '] ' + text;
+      area.appendChild(entry);
+      area.scrollTop = area.scrollHeight;
+    }
+  </script>
+</body>
+</html>
