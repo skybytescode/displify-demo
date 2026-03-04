@@ -1,0 +1,22 @@
+diff --git a/node_modules/@angular-devkit/build-angular/src/tools/vite/angular-memory-plugin.js b/node_modules/@angular-devkit/build-angular/src/tools/vite/angular-memory-plugin.js
+index b738074..e478d92 100644
+--- a/node_modules/@angular-devkit/build-angular/src/tools/vite/angular-memory-plugin.js
++++ b/node_modules/@angular-devkit/build-angular/src/tools/vite/angular-memory-plugin.js
+@@ -229,14 +229,15 @@ exports.createAngularMemoryPlugin = createAngularMemoryPlugin;
+  */
+ async function loadViteClientCode(file) {
+     const originalContents = await (0, promises_1.readFile)(file, 'utf-8');
+-    const updatedContents = originalContents.replace(`"You can also disable this overlay by setting ",
++    const normalizedContents = originalContents.replace(/\r\n/g, '\n');
++    const updatedContents = normalizedContents.replace(`"You can also disable this overlay by setting ",
+       h("code", { part: "config-option-name" }, "server.hmr.overlay"),
+       " to ",
+       h("code", { part: "config-option-value" }, "false"),
+       " in ",
+       h("code", { part: "config-file-name" }, hmrConfigName),
+       "."`, '');
+-    (0, node_assert_1.default)(originalContents !== updatedContents, 'Failed to update Vite client error overlay text.');
++    (0, node_assert_1.default)(normalizedContents !== updatedContents, 'Failed to update Vite client error overlay text.');
+     return updatedContents;
+ }
+ function pathnameWithoutBasePath(url, basePath) {
