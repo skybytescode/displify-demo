@@ -2,8 +2,9 @@
      Shell Dashboard – High-Interactive Demo Layer
      ============================================================ -->
 
+
 <!-- Toolbar -->
-<header class="shell-toolbar">
+<header class="shell-toolbar" *ngIf="isShellVisible">
   <h1 class="shell-title">Displify Shell</h1>
 
   <div class="toolbar-actions">
@@ -14,6 +15,28 @@
       *ngIf="currentLayout === 'focus'"
       (click)="resetLayout()">
       ← Back to Overview
+    </button>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Signage mode toggle -->
+    <button
+      class="btn-signage"
+      [class.btn-signage--active]="isSignageMode"
+      (click)="toggleSignageMode()"
+      title="Toggle signage autoplay mode">
+      {{ isSignageMode ? '⏹ Signage ON' : '▶ Signage' }}
+    </button>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Fullscreen toggle -->
+    <button
+      class="btn-fullscreen"
+      (click)="toggleFullscreen()"
+      [title]="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
+      {{ isFullscreen ? '⛶' : '⛶' }}
+      {{ isFullscreen ? 'Exit FS' : 'Fullscreen' }}
     </button>
 
     <span class="toolbar-divider"></span>
@@ -81,6 +104,12 @@
             }"></span>
       AI
     </button>
+
+    <span class="toolbar-divider"></span>
+
+    <button class="btn-hide-shell" (click)="toggleShell()" title="Hide toolbar">
+      ✕ Hide Shell
+    </button>
   </div>
 </header>
 
@@ -90,7 +119,8 @@
   [@layoutMorph]="currentLayout"
   [ngClass]="{
     'layout-overview': currentLayout === 'overview',
-    'layout-focus':    currentLayout === 'focus'
+    'layout-focus':    currentLayout === 'focus',
+    'shell-hidden':    !isShellVisible
   }">
 
   <!-- KPI Micro-app Panel -->

@@ -1,0 +1,144 @@
+{
+  "insights": [
+    {
+      "id": "ai_agents",
+      "type": "trend",
+      "topics": [
+        "ai",
+        "agents",
+        "innovation"
+      ],
+      "title": "Rise of AI Agents",
+      "summary": "AI agents that can plan, reason and execute tasks autonomously are becoming the next major evolution after chatbots.",
+      "source": "MIT Technology Review",
+      "url": "https://www.technologyreview.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABeUlEQVRoge2ZsY3DMAxFeXCRMiNoFI92Gu1GyQgurwjMiBQpyXGAlCKS/4tAkZ6rj0/RNBH0ebqyK9MP/12Y0r3s7rT6/g4sDLZX0xbOdalHG9H6b24Ci4SJe7dFPS3yJwqmTgMLifXUZSJgsTH5eylrq5bAImKqljpZviuqwCZh7PISecziuV0BNg0bZVcb0e/2fAQsAmaeFiPFPUldOjT79gSwSJgZ6a9jrFi3F1gEjKiVSAlg9bSpeNqqJbD5WIma4WJv7UM8gLoLLAwmUSPr5duSN73lvIYCi4LZKEqixt1Ifr7agMXA7B0sWwATd7VqCSwKxtU9VqymTj2V7qS/YgOLgul0Q++zUT6rAhYDGyTuSYkUoNXQs4BNw45TKTm7kdfQY7sCbD7W573ld+2fvdzT01gY2EysnPmQV5Say8MusGiYHg1fUuRvrpYDC4hJh9+vvfTyuzOwiZhq8UFHtbB2+C+LKrB5GLvM05Y6b/aBhcGgL9UDUFtr1AXS4cQAAAAASUVORK5CYII="
+    },
+    {
+      "id": "sme_ai_growth",
+      "type": "human_impact",
+      "topics": [
+        "smes",
+        "economy",
+        "innovation"
+      ],
+      "title": "AI Adoption in SMEs",
+      "summary": "Small and medium enterprises adopting AI report revenue growth up to 30% faster compared to traditional businesses.",
+      "source": "McKinsey Global Institute",
+      "url": "https://www.mckinsey.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABfUlEQVRoge2aO5KDMBBEx0VAyBE4CkdbH42jcASHBBSzzE9oDVsbamrdHcnSI+qaj0Ymgv6fBg496cGzbHX8HHaaYn8HlgbbzTQ5Y577Y3+jrxfRtLqbwDJh4t7SqaeHiqcrqdPAUmLmKY0SiwQsN+Zni+8Cy4ipStTJUurZ70kVWDOMQ5Eilz/aFWDNsIsE49ftEbDGmHsqZyJPkdLsS5Wz/hFYEsyN1LbermMjl5bkELBcWMmLdh1bjrP4fXxcsiWw5pi0GRZqHovakngABgAsB2YX5spT/cJ3F+sfgSXBxEjr5SVbamkze68VEFhzzAOQS6c4Vh5fsiWwDNim9WwmG3RYtoyZB7A8WFyY7SWlcjRmVcCSYJUGtmcviqjTxAksD/Y2lZLFVjt9P7wC1gY7573R1ncxkY8vgOXBJs+L9ZDX9DOpAkuGrSVFTqtXuTtPgTXH+BwhWlieS2BJMNXbG2X5i801qQJrh3FI3ettKSc91wEILAEGfai+Afsqn+hMJozxAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": "ai_healthcare",
+      "type": "human_impact",
+      "topics": [
+        "health",
+        "society",
+        "ai"
+      ],
+      "title": "AI in Healthcare Diagnostics",
+      "summary": "AI-assisted medical diagnostics are reducing detection time for certain diseases by up to 40%.",
+      "source": "Nature Medicine",
+      "url": "https://www.nature.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABcElEQVRoge2ZMZLDMAhFyaRI6SPoKD5acjQfJUdwuYVHrAAj43UmKc1s/q884qn6AwZEBP0/Dex60IUnP600+nkFlgarFrjyo92YbszPK/NMNP70G8DyYOJei4mnTXqDFFOngaXEzFMqC91b1gFLjbmRi50Cy4j1aqkxKhKtb4oqsNMwdq2Y5eKbdgXYadhB/CStlh8E7ARs9VQ6RZGVSJH/5WZgaTCyXr4semPaLBSsCVg6TEzU2bmNYyxGXszYJeQisNOx4J5FpCXxBFQAWBrMBubdOMZdWkOBpcGGrZeXGz6OHf6AwNJg6uBs+97gaaiWwHJgtNXFdRzTG7L6pThiA0uAjWwl0jwNjvquClgSLGjtOErPOi2cwPJgcSvVn73CgurF8grYadi27w3PXsPBU2A5sJF3HT71yexPhw8sE1b92Su8UQJLi4kKv/gElgRT7UqkJOBk20QClghjl1RLXt8oJXLjmIDAEmDQl+oXhiTWmyx6Gh4AAAAASUVORK5CYII="
+    },
+    {
+      "id": "ai_productivity",
+      "type": "trend",
+      "topics": [
+        "productivity",
+        "work",
+        "economy"
+      ],
+      "title": "AI Productivity Impact",
+      "summary": "Generative AI tools could increase global productivity by up to 1.5% annually over the next decade.",
+      "source": "Goldman Sachs Research",
+      "url": "https://www.goldmansachs.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABdElEQVRoge2avY3DMAyFGbi48kbwKB7NGs2jaASXVwRmJP7IOjhwKyJ5rwrET2keSJO0iaDP0y+7Ej1489ODFj8/gIXBDg1MnMqN7Yc5E60ltvy1G8DiYNW9PImnRfUGKyZOAwuJmaeSiwQsNuaxp54Ci4i1aqklci7BnW6KKrBhGLsM01y8aVeADcPear2JARuHmad54l77oz7laH7SugOLhFlbT6Sxs9kXe4HFwbStF093nZ3FSD0tLYnnIrAYWIlJp9iPY81Tb1SARcCoNR+agFWpc5qBhcF8YO48bafXRxuwsVixrB6wVEvWGWxlU6uWwKJgqurewtwvqHIDgEXBtETadqP+Smffn/Q/gEXAOmlM7NWs0xoKLAx23Up1+95/fQiw8ZhVS1vOM/vq1z29rIWBjcRKzJe8XjhNMlETsIjY2ex7LlZdPAUWATvauy7T/Pa9M7CBmOh815V1HOvsBRYFY5d7OuunGq1wAguDQV+qF2aGn90Y9m+IAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": "nvidia_ai_quote",
+      "type": "ceo_insight",
+      "topics": [
+        "leadership",
+        "ai",
+        "innovation"
+      ],
+      "title": "Jensen Huang on AI",
+      "summary": "\"AI will be the most important technology humanity has ever created.\"",
+      "source": "NVIDIA CEO — Jensen Huang",
+      "url": "https://www.nvidia.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABdElEQVRoge2YMZKDMAxFxVCkzBE4CkeDo+UoOQJlCgatLfkbs7uzKa3Z/N9hP6o/kr8kQv0/3RVaZdAHTg+ZcX4QC4MdfjHqmv543FSfIku6m1/1D2JxsOzeczRPk/IfuknGzGliITH3VKbdvCQWGsPd7qfEImKm0Q5yi5wUBSgnQCwEplDBvBb/iCvEumE/hBzyRsQ6YMXTZKTJW6RuA165ZSMWBiszmIWPZhzzSJJELBJmQmfM41jKIQu+92stEuuP+V2pRR/HBnhagwqx/liTONAiFWO091BicTDNLbJWHcaxOkafLyCx/tiRC9CMLBU5ub2m2i2JBcFm9cShzThWV7+XbkmsP1a2GyjAU2VXRSwI1sgbp4V9N9IaJ7E4WLuVKlU3tguqX5ZXxLph575XSqwf8cq1nhKLgc16GolXrnbL6yBALAymSPiIJCZicbFvYX+9E4uEmS4tctG6TRRigTCFmvCx5pubtgVILABGfai+AG4d1mRYLKqYAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": "open_source_ai",
+      "type": "tool",
+      "topics": [
+        "tools",
+        "developers",
+        "innovation"
+      ],
+      "title": "Rise of Open Source AI",
+      "summary": "Open-source AI models are enabling organizations to build private copilots and domain-specific AI assistants.",
+      "source": "Hugging Face",
+      "url": "https://huggingface.co",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABdklEQVRoge2ZO3LDMAxEoXGhMkfwUXw06Wg+io/g0oVHCL4UFXvikphkt9KAj9UOyQVEBP09fXFqpYmvWd3okvUNWBls84UTr7LjOkv9SYusXR5tB7A6mLp3O5mnIt3Bd1LMnAZWEnNP6czA6mPka7eoAquItdsyrsh2AI+3JbDxGKcC87P4S1wBNgx7UWIfBGwAFp7KmkmvSAmN98lfOf0EVgbzpKjvma1JQdYoIgkRsEqYHrXZYr31zjM3PWzHsvfOwIZjrWGmbMfiWO75EVgRLA9g89TbsckxvUOBlcEyNPoj1rVj9O4FBDYWsyyvRq7kOnsOyc3tUgVWARP3LIdoPdsxv0PTXmBlMPG0n0oxG8Z7FVgRrJOHjy4pejoBVgb7MZXqPt/mEGBDsZg/HX57xVSq9xRYDUyNzLlhTDfC5oOnwEphrFOp1kb7KwesLGZPW1uz3P8SGoGNxEwHTxcOPftGANhwLCuHf5T96BdYGQz6p/oGhZP1t2GSgyAAAAAASUVORK5CYII="
+    },
+    {
+      "id": "ai_education",
+      "type": "human_impact",
+      "topics": [
+        "education",
+        "society",
+        "innovation"
+      ],
+      "title": "AI in Education",
+      "summary": "AI-powered tutoring systems are helping students learn faster through personalized feedback and adaptive learning.",
+      "source": "Stanford HAI",
+      "url": "https://hai.stanford.edu",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABfklEQVRoge2aO3LDMAxEkXHhUkfQUXQ06Wg6Co+QMoVHCImfqIkdl8Qku5WHenSzwwUBiQj6e5rYtdEH73VlftTVgxZfP4ClwQ417cZb3bHf9dEn0fJlbgLLhDX3yk08rdIdR8PEaWApMfWU5vAUWF6M9Fl5Zz2wgVikpTxrpW39NVSBDcPY5Ua6p74OLA32Q1w6p18L2ADMPK1Giiwi22W/VTk9i8DyYDtpD2btGJmnFasClghr13q/cWg7JvaeVc7SElgSjFmnG3IE1UjdXCiCE1gOzIy8RKRhai+wJJjfFEk9bWfxEWnZlTZgOTCRDTrqr5ll0EFtmhhpCSwJtmharixYs3dlVYn/AZYEI50beu/cyWZVwJJgnRSLzaTBCSwP1k+l4obv9nb3EGAZsLO0XV97uacTsEzYwmEk3fuwvIYqsGzYOe+NKvfMU2DDMW7tWDuAbHPD+cV7Z2DDMNHZjsmqfWLzLFSBjcMiGrfJhrysEenBCSwNBv1TfQN1vegHgpqUJQAAAABJRU5ErkJggg=="
+    },
+    {
+      "id": "ai_jobs",
+      "type": "human_impact",
+      "topics": [
+        "jobs",
+        "economy",
+        "society"
+      ],
+      "title": "AI and the Future of Work",
+      "summary": "Most jobs will not disappear — but professionals who use AI will consistently outperform those who do not.",
+      "source": "World Economic Forum",
+      "url": "https://www.weforum.org",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABdElEQVRoge2ZO27EMAxEaaRI6SP4KHu0+Gh7lD2Cyy0MM+JPYhZYpBSRzDSW6edqIH4kIujvaeXQ3t5uT+LHB+/rRbeIX8DKYJeZ5t+euuSDbNkBYEUwcU+MtHAsxV5xGlhJTPaifZNdB6w0RgvfW2Q7LQqsIqYyT++f+od7SgMAVgLjkJe2X9sVYNOwrEWi0ZK8F7BZmHuqu043oGZLSZy2/DqAlcFM/LCn1rNTfxasCVghLAKjnm1tdSxmdfO0J1Vg0zGRu2cBtXd4SiuwMljq5aW0+Tjmnnr/CKwKpu/q6ZHGsV7lflRAYJMx7eUlRcY4ljWSKrAaGLl79sWqnI/ROVsCq4CFp+3Nl6FxCgysApY0Djq8nmmzD6wOlk+l+PW897UPATYZG+e95BfKPaqlrfchwCpgN8+L+dqrZ0vO7QqwOlgfptOQBqwo1jv83entzb0zsGmYqt915etKPvMgAGw6xiF1z2cwUYzRwMpg0D/VN9cRh6HQW6ZAAAAAAElFTkSuQmCC"
+    },
+    {
+      "id": "ai_copilots",
+      "type": "trend",
+      "topics": [
+        "copilots",
+        "productivity",
+        "tools"
+      ],
+      "title": "Rise of AI Copilots",
+      "summary": "AI copilots are becoming embedded in everyday tools, helping professionals write, analyze data and automate workflows.",
+      "source": "Microsoft AI Research",
+      "url": "https://www.microsoft.com",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABeElEQVRoge2aQY6DMAxFjbpgyRE4CkcbjsZROALLLio8cRzHYYQ6y1jt/4sqJI/VV5wfUyLo8zSxaU1Py5N4f/A6nbTY/AksDHaqaWXtSTS/6Id16ACwIJi4J0bqdPU02StOAwuJyV4sa0TAYmM08EZ5A9Jb64F1xLLU023krIPeFFVg3TA2WYn8L64A64a1GmQ22/t3BVgIrHiajBSlDUgz+zDlxwNYGEzPM97JYr0MSQunLAOLhJVD7GFJ0TzN0psZsDgYUTHyrENxWj2tQQVYf0x+R7bQWK5jfAxeQ4HFwTTW7+6vh/3rCQisP+a3ZHkcayS5VktgUTDm6qeFj6E6PQGLhJHG+nphfrW5f9XXgUXAGkmJTDnEd11+A1gcrO1KseSQaq82qG6aV8C6Yd7vLc15n70ebcAiYEupi1o4W12KKrBg2OKRpERJvvMUWAhM/6ph23K+/e4MrCOW1Xha+/SaH4HFwdjUfFBeZcUKJ7AwGPSl+gVu3dy664Pn0wAAAABJRU5ErkJggg=="
+    },
+    {
+      "id": "ai_society",
+      "type": "human_impact",
+      "topics": [
+        "society",
+        "innovation",
+        "future"
+      ],
+      "title": "AI and Society",
+      "summary": "Responsible AI development must focus on human impact, transparency and trust to ensure long-term societal benefit.",
+      "source": "OECD AI Policy Observatory",
+      "url": "https://oecd.ai",
+      "qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEUGBg+Uo7gel3ucAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABF0lEQVRoge3YMRKDIBAF0HVSWHoEj5Kj4dE8So5gmYIJkWU3y0Qn6b//VyKP7o8IIsxlM5ZIHQ9lk5RljreZDJWtVoK5tDXGvBuJDJcNrQezNcQHsYYMn+0zr5O6kOEzkTvZlZh0M/tgii9FDRkui7S6/P9pJINgX9k/DtP5DBkaGz890FKs9V0q5SHl2dYsZLBs1a3AZlpupUsmw2T+PdAo6wb1P3ERMlTmpdgbotnawA8CQgbL9NiX+oYsfgbUmUyGyrrYQaDbFzYyWHZ6BvS6xL5AhshWq4df9W92EPAcL4jIUFh/1R+DmrgLIMNnWhb7G2ybhJBdhXV3AWTgzJ6CLcczIBkii/iapPvC6bUwGQ5jmF95A60OJL8yeRvMAAAAAElFTkSuQmCC"
+    }
+  ]
+}

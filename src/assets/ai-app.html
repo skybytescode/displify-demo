@@ -3,375 +3,900 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Insight App</title>
+  <title>AI Insight Stream</title>
   <style>
-    /* ── Reset & base ─────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f7ff;
-      padding: 20px;
-      color: #1e1e2f;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #06060f;
+      color: #e2e8f0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
 
-    /* ── Header ───────────────────────────────── */
-    .header {
+    /* ── Background canvas ──────────────────────────── */
+    #bgCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── App wrapper ────────────────────────────────── */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: clamp(18px,3.5vh,36px) clamp(20px,4vw,36px) clamp(14px,2.5vh,28px);
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    .app-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: clamp(18px,3vh,32px);
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: clamp(0.85rem,3vw,1.6rem);
+      font-weight: 300;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      overflow: hidden;
+      white-space: nowrap;
+      height: 1.4em;
+      position: relative;
+    }
+
+    @keyframes gradShift { to { background-position: 200% center; } }
+    @keyframes titlePulse { 0%,100% { opacity:1; } 50% { opacity:.82; } }
+
+    .ticker-span {
+      position: absolute;
+      top: 50%;
+      white-space: nowrap;
+      will-change: transform;
+      background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 5s linear infinite, titlePulse 6s ease-in-out infinite;
+    }
+
+    .update-badge {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
+      justify-content: center;
+      gap: clamp(7px,1.4vw,12px);
+      font-size: clamp(1rem,3vw,1.7rem);
+      font-family: 'Courier New', 'Lucida Console', monospace;
+      font-weight: 300;
+      letter-spacing: .15em;
+      margin-top: 50px;
+      margin-bottom: clamp(12px,2vh,22px);
+      flex-shrink: 0;
+      background: linear-gradient(90deg, #c084fc, #818cf8, #e879f9, #c084fc);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 7s linear infinite, badgeZoom 3.5s ease-in-out infinite;
     }
 
-    .header h1 {
-      font-size: 1.1rem;
-      font-weight: 600;
+    @keyframes badgeZoom {
+      0%   { transform: scale(1.3); opacity: 0.4; }
+      50%  { transform: scale(1);   opacity: 1;   }
+      100% { transform: scale(1.3); opacity: 0.4; }
     }
 
-    .badge {
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 3px;
-      background: #fef3c7;
-      color: #92400e;
-      letter-spacing: 0.5px;
+    .live-dot {
+      width: clamp(8px,1.6vw,13px);
+      height: clamp(8px,1.6vw,13px);
+      border-radius: 50%;
+      background: #c084fc;
+      flex-shrink: 0;
+      /* dot can't use text-fill, so plain background + glow */
+      -webkit-text-fill-color: initial;
+      box-shadow: 0 0 6px #a855f7, 0 0 14px rgba(192,132,252,0.6);
+      animation: dot-matrix 1.2s ease-in-out infinite;
     }
 
-    /* ── Ticker / waiting state ───────────────── */
-    .waiting {
-      text-align: center;
-      padding: 40px 16px;
-      color: #94a3b8;
+    @keyframes dot-matrix {
+      0%, 100% { transform: scale(1);    box-shadow: 0 0 6px #a855f7, 0 0 14px rgba(192,132,252,0.6); }
+      50%       { transform: scale(1.35); box-shadow: 0 0 10px #c084fc, 0 0 24px rgba(192,132,252,0.8), 0 0 40px rgba(192,132,252,0.3); }
     }
 
-    .waiting .icon {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      animation: floatPulse 2s ease-in-out infinite;
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.75); }
     }
 
-    .waiting p {
-      font-size: 0.85rem;
+    .insight-counter {
+      font-size: clamp(0.75rem,2.2vw,1.1rem);
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+      padding-top: 2px;
     }
 
-    @keyframes floatPulse {
-      0%, 100% { transform: translateY(0); opacity: 0.7; }
-      50%      { transform: translateY(-6px); opacity: 1; }
+    /* ── Insight stage ──────────────────────────────── */
+    .insight-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 0;
     }
 
-    /* ── Insight card ─────────────────────────── */
     .insight-card {
-      display: none;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.38s ease, transform 0.38s ease;
     }
 
     .insight-card.visible {
-      display: block;
-      animation: slideUp 350ms ease;
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .insight-card .kpi-id {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #6366f1;
-      margin-bottom: 6px;
-    }
-
-    .insight-card h2 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #1e1e2f;
-    }
-
-    .insight-card .summary {
-      font-size: 0.88rem;
-      line-height: 1.7;
-      color: #475569;
-      margin-bottom: 16px;
-      min-height: 80px;
-    }
-
-    /* Blinking cursor for typewriter effect */
-    .typewriter-cursor {
+    /* ── Typewriter cursor ───────────────────────────── */
+    .tw-cursor {
       display: inline-block;
       width: 2px;
       height: 1em;
-      background: #6366f1;
+      background: currentColor;
       margin-left: 2px;
       vertical-align: text-bottom;
-      animation: blink 600ms step-end infinite;
+      animation: twBlink 0.75s step-end infinite;
     }
-
-    @keyframes blink {
+    @keyframes twBlink {
       0%, 100% { opacity: 1; }
-      50%      { opacity: 0; }
+      50%       { opacity: 0; }
     }
 
-    .insight-card .tags {
-      display: flex;
-      flex-wrap: wrap;
+    /* ── Contextual indicator ───────────────────────── */
+    .contextual-label {
+      font-size: clamp(0.68rem,2vw,1rem);
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #6366f1;
+      margin-bottom: clamp(8px,1.5vh,14px);
+      display: none;
+      align-items: center;
       gap: 6px;
     }
 
-    .insight-card .tag {
-      font-size: 0.7rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: #f1f5f9;
+    .contextual-label.active { display: flex; }
+
+    .contextual-label::before {
+      content: '';
+      display: inline-block;
+      width: clamp(5px,1vw,7px);
+      height: clamp(5px,1vw,7px);
+      border-radius: 50%;
+      background: #6366f1;
+      animation: pulse-dot 3s ease-in-out infinite;
+    }
+
+    /* ── Type badge ─────────────────────────────────── */
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: clamp(0.72rem,2.4vw,1.2rem);
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      padding: clamp(5px,1vh,9px) clamp(12px,2.5vw,20px);
+      border-radius: 4px;
+      margin-bottom: clamp(14px,2.5vh,24px);
+      border: 1px solid;
+    }
+
+    .type-badge.trend        { color: #00e8c0; border-color: rgba(0,232,192,.3);   background: rgba(0,232,192,.08);   }
+    .type-badge.tool         { color: #a78bfa; border-color: rgba(167,139,250,.3);  background: rgba(167,139,250,.08);  }
+    .type-badge.ceo_insight  { color: #fbbf24; border-color: rgba(251,191,36,.3);   background: rgba(251,191,36,.08);   }
+    .type-badge.human_impact { color: #34d399; border-color: rgba(52,211,153,.3);   background: rgba(52,211,153,.08);   }
+
+    /* ── Title ──────────────────────────────────────── */
+    .insight-title {
+      font-size: clamp(1.45rem,5.8vw,3.2rem);
+      font-weight: 700;
+      line-height: 1.25;
+      color: #f1f5f9;
+      margin-bottom: clamp(10px,2vh,18px);
+      letter-spacing: -0.3px;
+    }
+
+    .insight-divider {
+      width: clamp(32px,6vw,54px);
+      height: clamp(2px,0.4vh,4px);
+      border-radius: 2px;
+      margin-bottom: clamp(12px,2vh,20px);
+    }
+
+    /* ── Summary ────────────────────────────────────── */
+    .insight-summary {
+      font-size: clamp(1.4rem,5.04vw,2.8rem);
+      line-height: 1.75;
+      color: #94a3b8;
+      margin-bottom: clamp(12px,2vh,20px);
+    }
+
+    /* ── Source ─────────────────────────────────────── */
+    .insight-source {
+      font-size: clamp(1.05rem,3.36vw,1.68rem);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
       color: #475569;
-      opacity: 0;
-      transform: translateY(6px);
-      animation: tagPop 300ms ease forwards;
+      margin-bottom: clamp(14px,2.5vh,22px);
     }
 
-    @keyframes tagPop {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .insight-source span { color: #64748b; }
 
-    /* ── Log area ─────────────────────────────── */
-    .log-area {
-      margin-top: 20px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      font-size: 0.75rem;
-      color: #64748b;
-      max-height: 100px;
-      overflow-y: auto;
-    }
-
-    .log-area .entry {
-      padding: 2px 0;
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    /* ── Crash button ─────────────────────────── */
-    .footer {
-      margin-top: 16px;
+    /* ── QR section ─────────────────────────────────── */
+    .qr-section {
       display: flex;
-      justify-content: flex-end;
+      align-items: center;
+      gap: clamp(12px,2.5vw,22px);
+      padding: clamp(12px,2.5vh,20px) clamp(14px,3vw,24px);
+      border-radius: 10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
     }
 
+    .qr-img {
+      width: clamp(90px,20vw,148px);
+      height: clamp(90px,20vw,148px);
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,.05);
+      display: block;
+    }
+
+    .qr-label {
+      font-size: clamp(0.8rem,2.8vw,1.4rem);
+      line-height: 1.6;
+      color: #475569;
+    }
+
+    .qr-label strong {
+      display: block;
+      font-size: clamp(0.85rem,3vw,1.5rem);
+      color: #64748b;
+      margin-bottom: clamp(3px,0.5vh,6px);
+    }
+
+    /* ── Progress bar ───────────────────────────────── */
+    .progress-wrap {
+      flex-shrink: 0;
+      margin-top: clamp(14px,2.5vh,24px);
+    }
+
+    .progress-track {
+      height: clamp(2px,0.4vh,4px);
+      background: rgba(255,255,255,.07);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: clamp(10px,2vh,18px);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 100%;
+      transform-origin: left;
+    }
+
+    /* ── Dots navigation ────────────────────────────── */
+    .dots-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(8px,1.8vw,16px);
+    }
+
+
+    .dot {
+      width: clamp(6px,1.4vw,11px);
+      height: clamp(6px,1.4vw,11px);
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+      transition: background 0.3s ease, transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .dot.active {
+      background: #64748b;
+      transform: scale(1.5);
+    }
+
+    /* ── Crash button ───────────────────────────────── */
     .btn-crash {
-      padding: 6px 14px;
-      font-size: 0.75rem;
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      z-index: 10;
+      padding: 4px 10px;
+      font-size: 0.62rem;
       font-weight: 600;
       border: none;
-      border-radius: 6px;
-      background: #ef4444;
+      border-radius: 5px;
+      background: rgba(239,68,68,.45);
       color: #fff;
       cursor: pointer;
-      transition: background 200ms ease;
+      transition: background 200ms;
     }
 
-    .btn-crash:hover {
-      background: #dc2626;
+    .btn-crash:hover { background: rgba(220,38,38,.75); }
+
+    /* ── Responsive: short viewport (portrait strip) ── */
+    @media (max-height: 520px) {
+      .app-wrapper     { padding: 10px 14px 10px; }
+      .app-header      { margin-bottom: 10px; }
+      .insight-title   { font-size: clamp(1rem,4.5vw,2rem); }
+      .insight-summary { font-size: clamp(1.12rem,3.92vw,1.96rem); line-height: 1.6; }
+      .qr-img          { width: clamp(60px,14vw,90px); height: clamp(60px,14vw,90px); }
+      .qr-section      { padding: 8px 12px; }
+      .progress-wrap   { margin-top: 10px; }
+      .type-badge      { margin-bottom: 10px; }
+    }
+
+    /* ── Two-column layout for wide-and-short strip ── */
+    /* Kicks in when the AI panel is at the bottom of a portrait shell */
+    @media (max-height: 420px) and (min-width: 480px) {
+      .app-wrapper {
+        padding: 8px 20px 8px;
+        gap: 0;
+      }
+
+      .app-header {
+        margin-bottom: 6px;
+        align-items: center;
+      }
+
+      .update-badge { display: none; }
+
+      .insight-stage { justify-content: flex-start; }
+
+      /* Grid: text left, QR right */
+      .insight-card {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto auto auto;
+        column-gap: clamp(14px, 3vw, 28px);
+        align-items: start;
+      }
+
+      .contextual-label { grid-column: 1; }
+      .type-badge        { grid-column: 1; margin-bottom: 6px; font-size: clamp(0.6rem,1.6vw,0.85rem); padding: 3px 9px; }
+      .insight-title     { grid-column: 1; font-size: clamp(0.9rem,2.6vw,1.5rem); margin-bottom: 5px; }
+      .insight-divider   { display: none; }
+      .insight-summary   {
+        grid-column: 1;
+        font-size: clamp(1.008rem,2.66vw,1.4rem);
+        line-height: 1.5;
+        margin-bottom: 5px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .insight-source    { grid-column: 1; margin-bottom: 0; font-size: clamp(0.868rem,2.1vw,1.148rem); }
+
+      /* QR spans all rows in the right column */
+      .qr-section {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px;
+        align-self: stretch;
+      }
+
+      .qr-img {
+        width: clamp(64px, 11vw, 100px);
+        height: clamp(64px, 11vw, 100px);
+      }
+
+      .qr-label { text-align: center; font-size: clamp(0.58rem,1.3vw,0.76rem); }
+      .qr-label strong { font-size: clamp(0.6rem,1.4vw,0.78rem); margin-bottom: 2px; }
+
+      .progress-wrap { margin-top: 8px; }
+      .progress-track { margin-bottom: 6px; }
+    }
+
+    @media (max-width: 300px) {
+      .insight-title   { font-size: clamp(1rem,5.5vw,1.8rem); }
+      .insight-summary { font-size: clamp(1.19rem,4.9vw,1.82rem); }
+      .header-title    { font-size: clamp(0.75rem,3.5vw,1.2rem); }
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>🤖 AI Insights</h1>
-    <span class="badge">MICRO-APP</span>
+<canvas id="bgCanvas"></canvas>
+
+<div class="app-wrapper">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div style="flex:1;min-width:0;overflow:hidden;">
+      <div class="header-title" id="headerTicker"></div>
+    </div>
   </div>
 
-  <!-- Shown while waiting for data -->
-  <div id="waiting" class="waiting">
-    <div class="icon">📡</div>
-    <p>Listening for KPI selection from the Shell…</p>
+  <!-- Update badge -->
+  <div class="update-badge">
+    <span class="live-dot"></span>
+    Updated every 10 seconds
   </div>
 
-  <!-- Rendered when insight data arrives -->
-  <div id="insightCard" class="insight-card">
-    <div class="kpi-id" id="insightId"></div>
-    <h2 id="insightTitle"></h2>
-    <div class="summary" id="insightSummary"></div>
-    <div class="tags" id="insightTags"></div>
+  <!-- Insight card -->
+  <div class="insight-stage">
+    <div class="insight-card" id="insightCard">
+      <div class="contextual-label" id="contextualLabel">Contextual Insight</div>
+      <div class="type-badge trend" id="typeBadge">◈ AI Trend</div>
+      <div class="insight-title" id="insightTitle">—</div>
+      <div class="insight-divider" id="insightDivider"></div>
+      <div class="insight-summary" id="insightSummary"></div>
+      <div class="insight-source" id="insightSource"></div>
+      <div class="qr-section">
+        <img class="qr-img" id="qrImg" src="" alt="QR Code">
+        <div class="qr-label">
+          <strong>Scan to explore</strong>
+          Read the full article or report online.
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="logArea" class="log-area">
-    <em>Event log</em>
+  <!-- Progress + dots -->
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="dots-nav" id="dotsNav"></div>
   </div>
 
-  <div class="footer">
-    <button class="btn-crash" onclick="simulateCrash()">💥 Simulate Crash</button>
-  </div>
+</div>
 
-  <script>
-    // ─────────────────────────────────────────────
-    //  Local insight data keyed by KPI id
-    // ─────────────────────────────────────────────
-    const insightsDB = {
-      sme: {
-        title: 'SME Score Analysis',
-        summary:
-          'The SME score of 94% is well above the industry benchmark of 78%. ' +
-          'Key drivers include strong product-market fit in the mid-tier segment ' +
-          'and a 12% improvement in customer onboarding NPS over the last quarter. ' +
-          'Recommendation: maintain current strategy and explore upsell opportunities.',
-        tags: ['High Performer', 'NPS Up', 'Q4 Trend'],
-      },
-      revenue: {
-        title: 'Revenue Breakdown',
-        summary:
-          'Total revenue stands at $1.2M, representing a 9% QoQ increase. ' +
-          'Subscription revenue accounts for 68%, while services contribute 32%. ' +
-          'Enterprise deals grew by 15%, offsetting a slight dip in SMB renewals. ' +
-          'Recommendation: focus retention campaigns on the SMB cohort.',
-        tags: ['Growth', 'Enterprise Strong', 'SMB Watch'],
-      },
-      churn: {
-        title: 'Churn Rate Insights',
-        summary:
-          'Churn rate of 3.7% is within acceptable range but has ticked up from 3.1% last quarter. ' +
-          'Root cause analysis points to onboarding friction in the self-serve tier. ' +
-          'Cohorts acquired via paid channels show 2× higher 90-day churn. ' +
-          'Recommendation: A/B test a simplified onboarding flow for self-serve signups.',
-        tags: ['Attention Needed', 'Onboarding', 'Paid Channels'],
-      },
-    };
+<!-- Crash simulation -->
+<button class="btn-crash" onclick="simulateCrash()">💥 Crash</button>
 
-    // ─────────────────────────────────────────────
-    //  Typewriter engine
-    // ─────────────────────────────────────────────
-    let typewriterTimer = null;
+<script>
+  // ── Config ──────────────────────────────────────────
+  const ROTATION_MS       = 12_000;   // time per insight during auto-rotation
+  const CONTEXTUAL_MS     = 15_000;   // hold time after a KPI_SELECTED event
+  const TRANSITION_MS     = 380;      // fade out/in duration
 
-    /**
-     * Animate text character-by-character into the target element.
-     * @param {HTMLElement} el     – Container element.
-     * @param {string}      text   – Full text to type out.
-     * @param {number}      speed  – Ms per character (default 18).
-     * @param {Function}    onDone – Callback when finished.
-     */
-    function typewrite(el, text, speed = 18, onDone) {
-      // Cancel any previous typewriter run.
-      if (typewriterTimer) { clearInterval(typewriterTimer); }
+  // Map KPI ids (from kpi-app) to relevant topics
+  const KPI_TOPIC_MAP = {
+    smes:         ['smes', 'economy', 'innovation'],
+    institutions: ['society', 'innovation', 'future'],
+    funding:      ['economy', 'innovation', 'productivity'],
+  };
 
-      el.textContent = '';
+  // Visual config per insight type
+  const TYPE_CFG = {
+    trend:        { label: 'AI Trend',       icon: '◈', cls: 'trend',        color: '#00e8c0' },
+    tool:         { label: 'Tool Spotlight',  icon: '⬡', cls: 'tool',         color: '#a78bfa' },
+    ceo_insight:  { label: 'CEO Insight',     icon: '◉', cls: 'ceo_insight',  color: '#fbbf24' },
+    human_impact: { label: 'Human Impact',    icon: '◍', cls: 'human_impact', color: '#34d399' },
+  };
 
-      // Add blinking cursor
-      const cursor = document.createElement('span');
-      cursor.className = 'typewriter-cursor';
-      el.appendChild(cursor);
+  // ── State ───────────────────────────────────────────
+  let insights      = [];
+  let currentIndex  = 0;
+  let rotationTimer = null;
+  let progressRaf   = null;
+  let killed        = false;
 
-      let i = 0;
-      typewriterTimer = setInterval(() => {
-        if (i < text.length) {
-          // Insert text node before the cursor
-          el.insertBefore(document.createTextNode(text[i]), cursor);
-          i++;
-        } else {
-          clearInterval(typewriterTimer);
-          typewriterTimer = null;
-          // Remove cursor after a short pause
-          setTimeout(() => { cursor.remove(); }, 1200);
-          if (onDone) onDone();
-        }
-      }, speed);
+  // ── Inline fallback data (used if fetch fails) ──────
+  const FALLBACK_INSIGHTS = [
+    { id:'ai_agents',      type:'trend',        topics:['ai','agents','innovation'],          title:'Rise of AI Agents',             summary:'AI agents that can plan, reason and execute tasks autonomously are becoming the next major evolution after chatbots.',                                             source:'MIT Technology Review',       url:'https://www.technologyreview.com' },
+    { id:'sme_ai_growth',  type:'human_impact', topics:['smes','economy','innovation'],        title:'AI Adoption in SMEs',            summary:'Small and medium enterprises adopting AI report revenue growth up to 30% faster compared to traditional businesses.',                                           source:'McKinsey Global Institute',   url:'https://www.mckinsey.com' },
+    { id:'ai_healthcare',  type:'human_impact', topics:['health','society','ai'],              title:'AI in Healthcare Diagnostics',   summary:'AI-assisted medical diagnostics are reducing detection time for certain diseases by up to 40%.',                                                               source:'Nature Medicine',              url:'https://www.nature.com' },
+    { id:'ai_productivity',type:'trend',        topics:['productivity','work','economy'],       title:'AI Productivity Impact',         summary:'Generative AI tools could increase global productivity by up to 1.5% annually over the next decade.',                                                          source:'Goldman Sachs Research',      url:'https://www.goldmansachs.com' },
+    { id:'nvidia_quote',   type:'ceo_insight',  topics:['leadership','ai','innovation'],       title:'Jensen Huang on AI',             summary:'"AI will be the most important technology humanity has ever created."',                                                                                       source:'NVIDIA CEO — Jensen Huang',   url:'https://www.nvidia.com' },
+    { id:'open_source_ai', type:'tool',         topics:['tools','developers','innovation'],    title:'Rise of Open Source AI',         summary:'Open-source AI models are enabling organizations to build private copilots and domain-specific AI assistants.',                                               source:'Hugging Face',                url:'https://huggingface.co' },
+    { id:'ai_education',   type:'human_impact', topics:['education','society','innovation'],   title:'AI in Education',                summary:'AI-powered tutoring systems are helping students learn faster through personalized feedback and adaptive learning.',                                           source:'Stanford HAI',                url:'https://hai.stanford.edu' },
+    { id:'ai_jobs',        type:'human_impact', topics:['jobs','economy','society'],           title:'AI and the Future of Work',      summary:'Most jobs will not disappear — but professionals who use AI will consistently outperform those who do not.',                                                   source:'World Economic Forum',        url:'https://www.weforum.org' },
+    { id:'ai_copilots',    type:'trend',        topics:['copilots','productivity','tools'],    title:'Rise of AI Copilots',            summary:'AI copilots are becoming embedded in everyday tools, helping professionals write, analyze data and automate workflows.',                                      source:'Microsoft AI Research',       url:'https://www.microsoft.com' },
+    { id:'ai_society',     type:'human_impact', topics:['society','innovation','future'],      title:'AI and Society',                 summary:'Responsible AI development must focus on human impact, transparency and trust to ensure long-term societal benefit.',                                         source:'OECD AI Policy Observatory',  url:'https://oecd.ai' },
+  ];
+
+  // ── Boot: try JSON file, fall back to inline data ───
+  function boot(data) {
+    insights = data;
+    buildDots();
+    showInsight(0);
+    scheduleNext(ROTATION_MS);
+    startProgress(ROTATION_MS);
+  }
+
+  fetch('ai-insights.json')
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(({ insights: data }) => boot(data))
+    .catch(() => boot(FALLBACK_INSIGHTS));
+
+  // ── Typewriter helper ────────────────────────────────
+  let _twTimers = [];
+  function cancelTypewriters() {
+    _twTimers.forEach(clearTimeout);
+    _twTimers = [];
+  }
+  function typewriter(el, text, speed, onDone) {
+    el.textContent = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'tw-cursor';
+    el.appendChild(cursor);
+    let i = 0;
+    function tick() {
+      if (i < text.length) {
+        el.insertBefore(document.createTextNode(text[i]), cursor);
+        i++;
+        _twTimers.push(setTimeout(tick, speed));
+      } else {
+        setTimeout(() => { if (cursor.parentNode) cursor.parentNode.removeChild(cursor); }, 600);
+        if (onDone) onDone();
+      }
     }
+    tick();
+  }
 
-    // ─────────────────────────────────────────────
-    //  Listen for messages from the Shell
-    // ─────────────────────────────────────────────
-    window.addEventListener('message', (event) => {
-      const data = event.data;
-      if (!data || !data.type) return;
+  // ── Render insight ──────────────────────────────────
+  function showInsight(index, contextual = false) {
+    if (!insights.length) return;
+    currentIndex = ((index % insights.length) + insights.length) % insights.length;
 
-      // ── Heartbeat: respond to PING with PONG ──
-      if (data.type === 'PING') {
-        window.parent.postMessage(
-          { type: 'PONG', target: 'SHELL', payload: { app: 'AI_APP', ts: Date.now() } },
-          '*',
-        );
-        return; // silent — don't log PINGs
-      }
+    const ins   = insights[currentIndex];
+    const cfg   = TYPE_CFG[ins.type] ?? { label: ins.type, icon: '◈', cls: 'trend', color: '#00e8c0' };
+    const card  = document.getElementById('insightCard');
 
-      addLog(`📨 ${data.type} from ${data.target ?? 'unknown'}`);
-      console.log('[AI App] Message received:', data);
+    // Fade out
+    cancelTypewriters();
+    card.classList.remove('visible');
 
-      if (data.type === 'KPI_SELECTED' || data.type === 'DATA_UPDATE') {
-        const kpiId = data.payload?.id;
-        if (kpiId && insightsDB[kpiId]) {
-          renderInsight(kpiId, insightsDB[kpiId]);
-        }
-      }
+    setTimeout(() => {
+      // Contextual indicator
+      document.getElementById('contextualLabel').classList.toggle('active', contextual);
+
+      // Type badge
+      const badge    = document.getElementById('typeBadge');
+      badge.textContent = `${cfg.icon} ${cfg.label}`;
+      badge.className   = `type-badge ${cfg.cls}`;
+
+      // Content — title instant, summary + source typewritten
+      document.getElementById('insightTitle').textContent = ins.title;
+      document.getElementById('insightDivider').style.background = cfg.color;
+      document.getElementById('insightSummary').textContent = '';
+      document.getElementById('insightSource').textContent  = '';
+
+      const summaryEl = document.getElementById('insightSummary');
+      const sourceEl  = document.getElementById('insightSource');
+      const sourceText = `Source: ${ins.source}`;
+
+      // Start typewriter after card fades in (slight delay feels natural)
+      setTimeout(() => {
+        typewriter(summaryEl, ins.summary, 22, () => {
+          setTimeout(() => typewriter(sourceEl, sourceText, 28), 120);
+        });
+      }, 200);
+
+      // QR code: use pre-generated base64 if available, else fetch live
+      document.getElementById('qrImg').src = ins.qr
+        ? ins.qr
+        : `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(ins.url)}&color=94a3b8&bgcolor=06060f&qzone=1`;
+
+
+      updateDots();
+      card.classList.add('visible');
+    }, TRANSITION_MS);
+  }
+
+  // ── Auto-rotation scheduler ─────────────────────────
+  function scheduleNext(delay) {
+    clearTimeout(rotationTimer);
+    rotationTimer = setTimeout(() => {
+      if (killed) return;
+      showInsight(currentIndex + 1);
+      scheduleNext(ROTATION_MS);
+      startProgress(ROTATION_MS);
+    }, delay);
+  }
+
+  // ── Progress bar ────────────────────────────────────
+  function startProgress(dur) {
+    cancelAnimationFrame(progressRaf);
+    const fill  = document.getElementById('progressFill');
+    const ins   = insights[currentIndex];
+    const color = ins ? (TYPE_CFG[ins.type]?.color ?? '#00e8c0') : '#00e8c0';
+    fill.style.background  = color;
+    fill.style.boxShadow   = `0 0 6px ${color}55`;
+    fill.style.transition  = 'none';
+    fill.style.transform   = 'scaleX(1)';
+
+    const t0 = performance.now();
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      fill.style.transform = `scaleX(${1 - p})`;
+      if (p < 1) progressRaf = requestAnimationFrame(tick);
+    }
+    progressRaf = requestAnimationFrame(tick);
+  }
+
+  // ── Dots ────────────────────────────────────────────
+  function buildDots() {
+    const nav = document.getElementById('dotsNav');
+    nav.innerHTML = '';
+    insights.forEach((_, i) => {
+      const d     = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.onclick   = () => jumpTo(i);
+      nav.appendChild(d);
+    });
+  }
+
+  function updateDots() {
+    document.querySelectorAll('.dot').forEach((d, i) =>
+      d.classList.toggle('active', i === currentIndex)
+    );
+  }
+
+  function jumpTo(i) {
+    clearTimeout(rotationTimer);
+    cancelAnimationFrame(progressRaf);
+    showInsight(i);
+    scheduleNext(ROTATION_MS);
+    startProgress(ROTATION_MS);
+  }
+
+  // ── Contextual insight (triggered by KPI selection) ─
+  function handleKpiSelected(kpiId) {
+    const topics = KPI_TOPIC_MAP[kpiId] ?? [];
+
+    // Score each insight by number of matching topics
+    let bestIdx = -1, bestScore = 0;
+    insights.forEach((ins, i) => {
+      const score = ins.topics.filter(t => topics.includes(t)).length;
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
     });
 
-    // ─────────────────────────────────────────────
-    //  Render the insight card (with typewriter)
-    // ─────────────────────────────────────────────
-    function renderInsight(id, insight) {
-      document.getElementById('waiting').style.display = 'none';
-
-      const card = document.getElementById('insightCard');
-      card.classList.remove('visible');
-
-      // Force reflow so the animation re-triggers
-      void card.offsetHeight;
-      card.classList.add('visible');
-
-      document.getElementById('insightId').textContent = 'KPI: ' + id.toUpperCase();
-      document.getElementById('insightTitle').textContent = insight.title;
-
-      // ── Typewriter effect for the summary ──
-      const summaryEl = document.getElementById('insightSummary');
-      typewrite(summaryEl, insight.summary, 16, () => {
-        // After typing finishes, animate the tags in with staggered delays
-        renderTags(insight.tags);
-        addLog('✅ Insight fully rendered for "' + id + '"');
-      });
+    // Fallback: first trend insight, then first insight overall
+    if (bestIdx === -1) {
+      bestIdx = insights.findIndex(ins => ins.type === 'trend');
+      if (bestIdx === -1) bestIdx = 0;
     }
 
-    function renderTags(tags) {
-      const tagsContainer = document.getElementById('insightTags');
-      tagsContainer.innerHTML = '';
-      tags.forEach((tag, i) => {
-        const el = document.createElement('span');
-        el.className = 'tag';
-        el.textContent = tag;
-        el.style.animationDelay = (i * 120) + 'ms';
-        tagsContainer.appendChild(el);
-      });
-    }
+    clearTimeout(rotationTimer);
+    cancelAnimationFrame(progressRaf);
+    showInsight(bestIdx, true);
+    scheduleNext(CONTEXTUAL_MS);
+    startProgress(CONTEXTUAL_MS);
+  }
 
-    // ─────────────────────────────────────────────
-    //  Crash simulation
-    // ─────────────────────────────────────────────
-    function simulateCrash() {
-      addLog('💥 Crashing… (reloading page)');
+  // ── postMessage handler ─────────────────────────────
+  window.addEventListener('message', ({ data }) => {
+    if (!data?.type) return;
 
-      window.parent.postMessage(
-        { type: 'CRASH_SIMULATION', target: 'SHELL', payload: { app: 'AI_APP' } },
-        '*',
+    if (data.type === 'PING') {
+      if (!killed) window.parent.postMessage(
+        { type: 'PONG', target: 'SHELL', payload: { app: 'AI_APP', ts: Date.now() } }, '*'
       );
-
-      setTimeout(() => location.reload(), 300);
+      return;
     }
 
-    // ─────────────────────────────────────────────
-    //  Event log helper
-    // ─────────────────────────────────────────────
-    function addLog(text) {
-      const area = document.getElementById('logArea');
-      const entry = document.createElement('div');
-      entry.className = 'entry';
-      const ts = new Date().toLocaleTimeString();
-      entry.textContent = '[' + ts + '] ' + text;
-      area.appendChild(entry);
-      area.scrollTop = area.scrollHeight;
+    if (data.type === 'KILL') {
+      killed = true;
+      document.body.style.opacity = '.4';
+      document.body.style.pointerEvents = 'none';
+      return;
     }
-  </script>
+
+    if (data.type === 'KPI_SELECTED' && data.target === 'AI_APP') {
+      const kpiId = data.payload?.id;
+      if (kpiId) handleKpiSelected(kpiId);
+    }
+  });
+
+  // ── Crash simulation ────────────────────────────────
+  function simulateCrash() {
+    window.parent.postMessage(
+      { type: 'CRASH_SIMULATION', target: 'SHELL', payload: { app: 'AI_APP' } }, '*'
+    );
+    setTimeout(() => location.reload(), 300);
+  }
+
+  // ── Canvas background (purple constellation) ────────
+  (function () {
+    const canvas = document.getElementById('bgCanvas');
+    const ctx    = canvas.getContext('2d');
+    const FOCAL  = 440, CONN_D = 170;
+    let stars = [], rotY = 0, rotX = 0;
+
+    function buildStars(W, H) {
+      stars = Array.from({ length: 80 }, (_, i) => {
+        const z3 = (Math.random() - .5) * 460;
+        const sc = FOCAL / Math.max(10, FOCAL + z3);
+        return {
+          x3: ((Math.random() - .5) * W / sc) * .88,
+          y3: ((Math.random() - .5) * H / sc) * .88,
+          z3,
+          vx: (Math.random() - .5) * .08,
+          vy: (Math.random() - .5) * .07,
+          vz: (Math.random() - .5) * .05,
+          baseR: i < 15 ? Math.random() * 2.2 + 2 : Math.random() * 1.1 + 0.5,
+          phase:   Math.random() * Math.PI * 2,
+          twinkle: .025 + Math.random() * .04,
+          bright:  i < 15,
+        };
+      });
+    }
+
+    function proj3D(x3, y3, z3, W, H) {
+      const cy = Math.cos(rotY), sy = Math.sin(rotY);
+      const cx = Math.cos(rotX), sx = Math.sin(rotX);
+      const rx  = x3 * cy - z3 * sy;
+      const rz  = x3 * sy + z3 * cy;
+      const ry  = y3 * cx - rz * sx;
+      const rz2 = y3 * sx + rz * cx;
+      const sc  = FOCAL / Math.max(10, FOCAL + rz2);
+      return { sx: W / 2 + rx * sc, sy: H / 2 + ry * sc, depth: rz2, sc };
+    }
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { requestAnimationFrame(draw); return; }
+
+      // Background
+      ctx.fillStyle = '#06060f';
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle purple nebula
+      const g = ctx.createRadialGradient(W * .35, H * .25, 0, W * .35, H * .25, W * .55);
+      g.addColorStop(0, 'rgba(99,102,241,0.05)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // Advance rotation
+      rotY += .00011;
+      rotX  = Math.sin(rotY * .33) * .055;
+
+      // Drift stars
+      stars.forEach(s => {
+        s.x3 += s.vx; s.y3 += s.vy; s.z3 += s.vz;
+        s.phase += s.twinkle;
+        if (Math.abs(s.z3) > 220)   s.vz *= -1;
+        if (Math.abs(s.x3) > W * .73) s.vx *= -1;
+        if (Math.abs(s.y3) > H * .73) s.vy *= -1;
+      });
+
+      // Project
+      const proj = stars.map(s => {
+        const p  = proj3D(s.x3, s.y3, s.z3, W, H);
+        const df = Math.max(.18, Math.min(1.45, FOCAL / (FOCAL + p.depth + 300) * 2.1));
+        return { s, ...p, df };
+      }).filter(p => p.sx > -50 && p.sx < W + 50 && p.sy > -50 && p.sy < H + 50);
+
+      // Constellation lines
+      for (let a = 0; a < proj.length; a++) {
+        for (let b = a + 1; b < proj.length; b++) {
+          const pa = proj[a], pb = proj[b];
+          const dx = pb.sx - pa.sx, dy = pb.sy - pa.sy;
+          const d  = Math.sqrt(dx * dx + dy * dy);
+          if (d < CONN_D) {
+            const al = (1 - d / CONN_D) * .11 * pa.df * pb.df;
+            ctx.strokeStyle = `rgba(99,102,241,${al.toFixed(3)})`;
+            ctx.lineWidth   = .45;
+            ctx.beginPath();
+            ctx.moveTo(pa.sx, pa.sy);
+            ctx.lineTo(pb.sx, pb.sy);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Stars
+      proj.forEach(({ s, sx, sy, df }) => {
+        const twk = .65 + .35 * Math.sin(s.phase);
+        const r   = s.baseR * df * twk;
+        const al  = (.35 + .55 * twk) * Math.min(1, df);
+
+        if (s.bright) {
+          const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 4.5);
+          glow.addColorStop(0, `rgba(167,139,250,${(al * .28).toFixed(2)})`);
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(sx, sy, r * 4.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = s.bright
+          ? `rgba(167,139,250,${al.toFixed(2)})`
+          : `rgba(203,213,225,${(al * .55).toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, Math.max(.25, r), 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      buildStars(canvas.width, canvas.height);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    draw();
+  })();
+
+  // ── Header ticker: one copy, left → right, seamless loop ──
+  (function initTicker() {
+    const container = document.getElementById('headerTicker');
+    if (!container) return;
+
+
+    const TEXT = 'AI INSIGHT STREAM';
+    const s1 = document.createElement('span');
+    const s2 = document.createElement('span');
+    [s1, s2].forEach(s => {
+      s.className = 'ticker-span';
+      s.textContent = TEXT;
+      container.appendChild(s);
+    });
+
+    requestAnimationFrame(() => {
+      const W = container.offsetWidth;
+      const T = s1.offsetWidth;
+      // spacing = W + T → copy2 enters from left exactly when copy1 exits right
+      const spacing = W + T;
+      const speed = W / 7; // px per second — crosses container in ~7s
+
+      let x1 = 0;          // copy1 starts in view (left edge)
+      let x2 = -spacing;   // copy2 waits off-screen to the left
+      let last = performance.now();
+
+      s1.style.transform = `translateX(${x1}px) translateY(-50%)`;
+      s2.style.transform = `translateX(${x2}px) translateY(-50%)`;
+
+      function tick(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+
+        x1 += speed * dt;
+        x2 += speed * dt;
+
+        // When a copy fully exits the right edge, wrap it behind the other
+        if (x1 > W) x1 = x2 - spacing;
+        if (x2 > W) x2 = x1 - spacing;
+
+        s1.style.transform = `translateX(${x1}px) translateY(-50%)`;
+        s2.style.transform = `translateX(${x2}px) translateY(-50%)`;
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+    });
+  })();
+</script>
 </body>
 </html>

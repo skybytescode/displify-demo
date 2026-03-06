@@ -1,0 +1,73 @@
+{
+  "kpis": [
+    {
+      "id": "smes",
+      "value": 94,
+      "label": "IMM-uri sprijinite",
+      "level1": {
+        "title": "Supporting 94 SMEs",
+        "industries": ["Tech", "Manufacturing", "Agri"],
+        "regionalImpact": "+1500 locuri de muncă",
+        "growthProjection": "+45%",
+        "chartPoints": [12, 24, 36, 42, 45],
+        "description": "Majoritatea IMM-urilor sprijinite activează în domenii tehnologice și manufactură."
+      },
+      "level2": {
+        "title": "Human Impact Summary",
+        "jobsCreated": "1,500+ locuri de muncă",
+        "entrepreneurStories": "Transformarea afacerilor locale prin tehnologie și inovare.",
+        "communityBenefits": [
+          "Educație și formare pentru tineri",
+          "Creșterea calității vieții în regiune",
+          "Crearea unui ecosistem regional de inovare"
+        ]
+      }
+    },
+    {
+      "id": "institutions",
+      "value": 22,
+      "label": "Instituții Publice",
+      "level1": {
+        "title": "Public Institutions Engagement",
+        "focusAreas": ["Digital Services", "Smart Administration", "Innovation Partnerships"],
+        "regionalImpact": "Accelerarea digitalizării serviciilor publice",
+        "growthProjection": "+38%",
+        "chartPoints": [12, 20, 28, 32, 38],
+        "description": "Colaborarea dintre administrație și mediul privat accelerează digitalizarea regională."
+      },
+      "level2": {
+        "title": "Societal Impact",
+        "citizenBenefits": [
+          "Servicii publice mai rapide",
+          "Acces digital la administrație",
+          "Procese administrative simplificate"
+        ],
+        "innovationImpact": "Crearea unui model regional de transformare digitală."
+      }
+    },
+    {
+      "id": "funding",
+      "value": "21M",
+      "unit": "EUR",
+      "label": "Finanțări",
+      "level1": {
+        "title": "Regional Funding Overview",
+        "investmentFocus": ["Digital Transformation", "Smart Industry", "AI & Data"],
+        "regionalImpact": "Avg 223K EUR per SME",
+        "growthProjection": "+45%",
+        "chartPoints": [12, 24, 36, 42, 45],
+        "description": "Investițiile regionale indică o prioritate strategică pentru inovare și digitalizare."
+      },
+      "level2": {
+        "title": "Economic Impact",
+        "regionalGrowth": "+45% creștere estimată",
+        "longTermImpact": "Consolidarea ecosistemului regional de inovare și antreprenoriat.",
+        "communityBenefits": [
+          "Finanțare accesibilă pentru startup-uri",
+          "Parteneriate public-private sustenabile",
+          "Creșterea competitivității regionale"
+        ]
+      }
+    }
+  ]
+}

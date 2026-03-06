@@ -1,258 +1,1231 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KPI App</title>
+  <title>DIZ 4.0 – AI Insight Wall</title>
   <style>
-    /* ── Reset & base ─────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; overflow: hidden; color: #fff; }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f4f8;
-      padding: 24px;
-      color: #1e1e2f;
+    .level { position: absolute; inset: 0; display: none; flex-direction: column; }
+    .level.active { display: flex; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .level-fade { animation: fadeIn .45s ease; }
+
+    .level-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .level-bg canvas { display: block; width: 100%; height: 100%; }
+    .level-bg svg    { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .level-content { position: relative; z-index: 1; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+    /* ── shared chrome ── */
+    .btn-back {
+      position: absolute; top: 14px; left: 14px; z-index: 10;
+      padding: 5px 14px; font-size: .75rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 6px; color: rgba(255,255,255,.75); cursor: pointer; transition: background 200ms;
     }
-
-    /* ── Header ───────────────────────────────── */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .header h1 {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .badge {
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 3px;
-      background: #e0e7ff;
-      color: #4338ca;
-      letter-spacing: 0.5px;
-    }
-
-    /* ── Card grid ────────────────────────────── */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .kpi-card {
-      background: #ffffff;
-      border: 2px solid transparent;
-      border-radius: 12px;
-      padding: 24px 20px;
-      cursor: pointer;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
-    }
-
-    .kpi-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
-      border-color: #6366f1;
-    }
-
-    .kpi-card.selected {
-      border-color: #6366f1;
-      background: #eef2ff;
-    }
-
-    .kpi-card .value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #4338ca;
-      line-height: 1;
-    }
-
-    .kpi-card .label {
-      margin-top: 8px;
-      font-size: 0.85rem;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .kpi-card .unit {
-      font-size: 0.95rem;
-      color: #94a3b8;
-      margin-left: 2px;
-    }
-
-    /* ── Status log ───────────────────────────── */
-    .status-bar {
-      margin-bottom: 16px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      font-size: 0.8rem;
-      color: #64748b;
-      min-height: 38px;
-    }
-
-    /* ── Crash button ─────────────────────────── */
+    .btn-back:hover { background: rgba(255,255,255,.18); }
     .btn-crash {
-      padding: 8px 18px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 6px;
-      background: #ef4444;
-      color: #fff;
-      cursor: pointer;
-      transition: background 200ms ease;
+      position: absolute; bottom: 14px; right: 14px; z-index: 10;
+      padding: 5px 14px; font-size: .72rem; font-weight: 600;
+      border: none; border-radius: 6px; background: rgba(239,68,68,.65);
+      color: #fff; cursor: pointer; transition: background 200ms;
+    }
+    .btn-crash:hover { background: rgba(220,38,38,.9); }
+
+    /* ── Signage mode overrides ── */
+    body.signage-mode .btn-back,
+    body.signage-mode .btn-crash,
+    body.signage-mode .tap-hint { display: none !important; }
+    body.signage-mode .kpi-card { cursor: default; }
+
+    /* ════ LEVEL 0 ════ */
+    #level0 { background: #03030f; }
+    /* Vignette — dark edges, bright center */
+    #level0::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,12,.50) 100%); pointer-events:none; z-index:0; }
+
+    .l0-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .l0-inner { width:100%; max-width:1400px; padding:0 5%; text-align:center; }
+
+    /* Animated gradient title */
+    @keyframes gradShift { to { background-position: 200% center; } }
+    .wall-title {
+      font-size:clamp(1.95rem,4.2vw,3.9rem); font-weight:300; letter-spacing:.18em;
+      margin-bottom:clamp(40px,6vh,72px); text-transform:uppercase;
+      background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 5s linear infinite;
     }
 
-    .btn-crash:hover {
-      background: #dc2626;
+    .kpi-row { display:flex; align-items:stretch; justify-content:center; }
+    .kpi-card { flex:1; max-width:400px; padding:clamp(24px,5vh,52px) clamp(18px,3vw,38px); cursor:pointer; position:relative; transition:transform 220ms ease; }
+
+    /* Glowing gradient divider */
+    .kpi-card:not(:last-child)::after {
+      content:''; position:absolute; right:0; top:12%; height:76%; width:1px;
+      background: linear-gradient(to bottom, transparent, rgba(0,200,255,.35), rgba(160,80,255,.35), transparent);
     }
+
+    /* Card hover glow overlay */
+    .kpi-card::before {
+      content:''; position:absolute; inset:0;
+      background: radial-gradient(ellipse at center, rgba(0,180,255,.06) 0%, transparent 70%);
+      opacity:0; transition: opacity 300ms;
+    }
+    .kpi-card:hover { transform:scale(1.04); }
+    .kpi-card:hover::before { opacity:1; }
+
+    /* Neon glowing numbers */
+    .kpi-value {
+      font-size:clamp(4.5rem,9vw,8rem); font-weight:800; color:#fff; line-height:1; letter-spacing:-.02em;
+      white-space: nowrap;
+      text-shadow: 0 0 20px rgba(0,200,255,.35), 0 0 50px rgba(0,100,255,.15);
+      transition: text-shadow 300ms;
+    }
+    .kpi-card:hover .kpi-value {
+      text-shadow: 0 0 25px rgba(0,220,255,.7), 0 0 60px rgba(80,60,255,.4), 0 0 90px rgba(0,100,255,.2);
+    }
+    .kpi-unit  { font-size:clamp(1.8rem,3.8vw,3.4rem); font-weight:600; color:rgba(180,220,255,.75); }
+    .kpi-label { font-size:clamp(1.3rem,2.47vw,2.21rem); margin-top:18px; letter-spacing:.06em; line-height:1.5;
+      background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gradShift 5s linear infinite, titlePulse 6s ease-in-out infinite; }
+
+    /* ── KPI card entrance ── */
+    @keyframes cardIn {
+      from { opacity:0; transform:translateY(36px) scale(.94); }
+      to   { opacity:1; transform:translateY(0)    scale(1);   }
+    }
+    .kpi-card { animation: cardIn .75s cubic-bezier(.22,.68,0,1.18) both; }
+    .kpi-card:nth-child(1) { animation-delay:.08s; }
+    .kpi-card:nth-child(2) { animation-delay:.22s; }
+    .kpi-card:nth-child(3) { animation-delay:.36s; }
+
+    /* ── KPI value count glow ── */
+    @keyframes valueGlow {
+      0%,100% { text-shadow: 0 0 20px rgba(0,200,255,.35), 0 0 50px rgba(0,100,255,.15); }
+      50%     { text-shadow: 0 0 30px rgba(0,220,255,.65), 0 0 70px rgba(0,120,255,.30), 0 0 110px rgba(80,60,255,.18); }
+    }
+    .kpi-value { animation: valueGlow 4s ease-in-out infinite; }
+
+    /* ── Title shimmer pulse ── */
+    @keyframes titlePulse {
+      0%,100% { opacity:1; }
+      50%     { opacity:.82; }
+    }
+    .wall-title { animation: gradShift 5s linear infinite, titlePulse 6s ease-in-out infinite; }
+
+    /* Futuristic "tap to explore" pill */
+    @keyframes pillPulse {
+      0%,100% { border-color:rgba(0,200,255,.25); box-shadow:0 0 8px rgba(0,200,255,.08),inset 0 0 8px rgba(0,200,255,.04); color:rgba(0,200,255,.5); }
+      50%     { border-color:rgba(0,220,255,.60); box-shadow:0 0 18px rgba(0,200,255,.28),inset 0 0 12px rgba(0,200,255,.10); color:rgba(0,220,255,.80); }
+    }
+    .tap-hint {
+      display:inline-block; margin-top:32px; padding:clamp(9px,1.5vh,14px) clamp(26px,3vw,40px);
+      border:1px solid rgba(0,200,255,.25); border-radius:20px;
+      font-size:clamp(1.105rem,1.95vw,1.69rem); color:rgba(0,200,255,.6);
+      letter-spacing:.06em;
+      box-shadow: 0 0 8px rgba(0,200,255,.08), inset 0 0 8px rgba(0,200,255,.04);
+      transition: border-color 200ms, color 200ms, box-shadow 200ms;
+      animation: pillPulse 3.5s ease-in-out infinite;
+    }
+    .kpi-card:hover .tap-hint {
+      border-color: rgba(0,220,255,.75);
+      color: #00d4ff;
+      box-shadow: 0 0 14px rgba(0,200,255,.3), inset 0 0 10px rgba(0,200,255,.08);
+      animation: none;
+    }
+
+    /* ════ LEVEL 1 ════ */
+    #level1 { background:#020c0a; }
+    .l1-header { padding:clamp(18px,3.5vh,36px) 48px clamp(12px,2.5vh,22px); text-align:center; font-size:clamp(1.2rem,2.4vw,2rem); font-weight:600; letter-spacing:.06em; color:rgba(255,255,255,.9); border-bottom:1px solid rgba(255,255,255,.08); }
+    .l1-body   { flex:1; display:flex; padding:clamp(18px,3vh,34px) clamp(22px,4vw,50px); gap:clamp(8px,1vw,16px); min-height:0; }
+    .l1-left   { flex:1.1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative; }
+    .l1-kpi-big  { font-size:clamp(6rem,13vw,11rem); font-weight:800; color:#fff; line-height:1; }
+    .l1-kpi-unit { font-size:clamp(2.4rem,5.5vw,4.8rem); font-weight:600; opacity:.65; }
+    .l1-kpi-label{ font-size:clamp(2.8rem,5.88vw,5.04rem); margin-top:18px; margin-bottom:44px; font-family:monospace; letter-spacing:.08em; font-weight:500;
+      background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 5s linear infinite, titlePulse 6s ease-in-out infinite; }
+    .l1-bullets  { list-style:none; display:flex; flex-direction:column; gap:clamp(18px,2.8vh,32px); overflow:hidden; }
+    .l1-bullets li { text-align:center; font-size:clamp(1.96rem,3.72vw,2.94rem); color:rgba(255,255,255,.78); line-height:1.55; }
+    .l1-bullets li::before { content:'» '; color:#00e8c0; font-size:1.5em; letter-spacing:.05em; text-shadow:0 0 8px rgba(0,232,192,.7); }
+    .l1-scan { position:absolute; left:-8%; right:-8%; top:0; height:3px; pointer-events:none; z-index:10;
+      background:linear-gradient(90deg,transparent 0%,rgba(220,40,40,.5) 20%,rgba(255,55,55,.95) 50%,rgba(220,40,40,.5) 80%,transparent 100%);
+      box-shadow:0 0 10px rgba(255,50,50,.75),0 0 28px rgba(255,50,50,.4),0 0 55px rgba(255,80,80,.18); }
+    .l1-right { flex:none; align-self:center; margin-right:auto; margin-left:0; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; width:clamp(260px,42%,420px); padding:clamp(10px,2vh,18px) clamp(20px,4vw,40px) clamp(10px,2vh,18px) clamp(10px,2vw,20px); background:radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,255,255,.04) 0%, transparent 100%); border:none; box-shadow:none; text-align:center; -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%, black 25%, transparent 100%); mask-image:radial-gradient(ellipse 85% 85% at 50% 50%, black 25%, transparent 100%); }
+    .chart-title { font-size:clamp(1rem,1.8vw,1.4rem); font-weight:600; color:rgba(255,255,255,.65); margin-bottom:8px; }
+    .chart-projection { font-size:clamp(2.24rem,5.04vw,3.92rem); font-weight:800; color:#00e8c0; margin-bottom:10px; }
+    .chart-projection .proj-label { font-size:.72em; font-weight:400; color:rgba(255,255,255,.45); margin-left:6px; }
+    .bar-chart { display:flex; align-items:flex-end; justify-content:center; gap:clamp(8px,2vw,18px); height:clamp(80px,15vh,130px); width:100%; margin-bottom:10px; }
+    .bar-group { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; max-width:58px; }
+    .bar { width:100%; border-radius:4px 4px 0 0; }
+    .bar-year { font-size:clamp(.75rem,1.3vw,.95rem); color:rgba(255,255,255,.5); text-align:center; }
+    .bar-forecast { font-size:.8rem; color:#fbbf24; }
+    .chart-cta { font-size:clamp(1.12rem,1.96vw,1.4rem); color:rgba(255,255,255,.38); margin-top:8px; }
+    .l1-footer { padding:clamp(10px,2vh,20px) 48px; text-align:center; font-size:clamp(.85rem,1.4vw,1.1rem); font-style:italic; color:rgba(255,255,255,.38); border-top:1px solid rgba(255,255,255,.06); }
+
+    /* ════ LEVEL 2 ════ */
+    #level2 { background:#0a0208; }
+    .l2-header { padding:clamp(18px,3.5vh,36px) 48px clamp(12px,2.5vh,22px); text-align:center; font-size:clamp(2.4rem,4.8vw,4rem); font-weight:700; letter-spacing:.18em; text-transform:uppercase; border-bottom:1px solid rgba(255,80,140,.12);
+      background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 5s linear infinite, titlePulse 6s ease-in-out infinite; }
+    .l2-body   { flex:1; padding:clamp(24px,4vh,48px) clamp(20px,4vw,64px) clamp(14px,2.5vh,32px); display:flex; flex-direction:column; justify-content:center; align-items:center; gap:clamp(24px,4vh,48px); min-height:0; position:relative; overflow:hidden; text-align:center; }
+    #l2ScanLine { position:absolute; left:15%; right:15%; top:-60px; height:3px; background:linear-gradient(90deg,transparent 0%,rgba(220,40,100,.5) 15%,rgba(255,55,130,.95) 50%,rgba(220,40,100,.5) 85%,transparent 100%); box-shadow:0 0 10px rgba(255,50,120,.75),0 0 28px rgba(255,50,120,.4),0 0 55px rgba(220,60,160,.18); pointer-events:none; z-index:9999; display:none; }
+    .impact-item  { display:flex; flex-direction:column; align-items:center; gap:5px; width:100%; }
+    .impact-arrow { display:none; }
+    .impact-content { display:flex; flex-direction:column; align-items:center; width:100%; }
+    .impact-content h3 { font-size:clamp(1.96rem,3.72vw,2.94rem); font-weight:600; letter-spacing:.16em; text-transform:uppercase; font-family:monospace; margin-bottom:7px;
+      background: linear-gradient(90deg, #ff2fa0, #a855f7, #ff2fa0, #c084fc, #ff2fa0);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 4s linear infinite, titlePulse 6s ease-in-out infinite; }
+    .impact-value { font-size:clamp(2.8rem,5.88vw,5.04rem); font-weight:800; color:#fff; text-shadow:0 0 22px rgba(255,80,120,.4),0 0 55px rgba(220,60,180,.18); }
+    .impact-content p  { font-size:clamp(1.96rem,3.72vw,2.94rem); color:rgba(255,255,255,.78); line-height:1.65; }
+    .impact-subitems   { list-style:none; margin-top:6px; display:flex; flex-direction:column; gap:clamp(18px,2.8vh,32px); align-items:center; }
+    .impact-subitems li{ display:flex; align-items:flex-start; font-size:clamp(1.96rem,3.72vw,2.94rem); color:rgba(255,220,230,.78); }
+    .impact-subitems li::before { content:'»'; font-size:1.5em; line-height:1; flex-shrink:0; margin-top:-0.05em; margin-right:12px;
+      background: linear-gradient(90deg, #c084fc, #818cf8, #e879f9, #c084fc);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 7s linear infinite, titlePulse 6s ease-in-out infinite; }
+    .l2-footer { padding:clamp(10px,2vh,20px) 48px; text-align:center; font-size:clamp(.85rem,1.4vw,1.1rem); font-style:italic; color:rgba(255,255,255,.38); border-top:1px solid rgba(255,80,140,.08); }
+
+
+    /* ── responsive ── */
+    @media(max-width:640px){
+      .kpi-row{flex-direction:column;align-items:center}
+      .kpi-card:not(:last-child)::after{display:none}
+      .l1-body{flex-direction:column}
+      .l1-header,.l2-header{padding:16px 20px 10px}
+      .l2-body{padding:18px 22px}
+    }
+    @media(orientation:portrait){
+      .kpi-row{flex-direction:column;align-items:center}
+      .kpi-card:not(:last-child)::after{display:none}
+      .l1-body{flex-direction:column}
+    }
+
+    /* ── Animated line chart ── */
+    .lc-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    @keyframes lcLineDraw { to { stroke-dashoffset: 0; } }
+    @keyframes lcFillFade { from { opacity:0 } to { opacity:1 } }
+    .lc-fill { animation: lcFillFade .9s ease .55s both; }
+    @keyframes lcDotIn { from { transform:scale(0); opacity:0 } to { transform:scale(1); opacity:1 } }
+    .lc-dot, .lc-dot-last { transform-box: fill-box; transform-origin: center; animation: lcDotIn .45s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes lcPulse { 0%,100% { transform:scale(1); opacity:.8 } 50% { transform:scale(1.6); opacity:1 } }
+    .lc-dot-last { animation: lcDotIn .45s cubic-bezier(.34,1.56,.64,1) both, lcPulse 2s ease-in-out 1.4s infinite; }
+   @keyframes l1NumGlow { 0%,100%{text-shadow:0 0 14px rgba(0,220,200,.18),0 0 40px rgba(0,200,180,.1)} 50%{text-shadow:0 0 28px rgba(0,220,200,.5),0 0 65px rgba(0,200,180,.25),0 0 100px rgba(0,180,160,.12)} }
+   .l1-kpi-big { animation: l1NumGlow 3.5s ease-in-out 1s infinite; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>📊 KPI Dashboard</h1>
-    <span class="badge">MICRO-APP</span>
+  <!-- ════ LEVEL 0 – Overview ════ -->
+  <div id="level0" class="level active">
+    <div class="level-bg"><canvas id="netCanvas"></canvas></div>
+    <div class="level-content l0-content">
+      <div class="l0-inner">
+        <h1 class="wall-title">DIZ 4.0 – AI Insight Wall</h1>
+        <div class="kpi-row" id="kpiRow"></div>
+      </div>
+    </div>
+    <button class="btn-crash" onclick="simulateCrash()">💥 Simulate Crash</button>
   </div>
 
-  <div id="status" class="status-bar">Click a KPI card to notify the Shell…</div>
-
-  <div class="card-grid">
-    <!-- Cards are rendered by JS below -->
+  <!-- ════ LEVEL 1 – KPI Insight ════ -->
+  <div id="level1" class="level">
+    <button class="btn-back" onclick="navigate('level0')">← Back</button>
+    <div class="level-bg"><canvas id="netCanvas1"></canvas></div>
+    <div class="level-content">
+      <div class="l1-header" id="l1Header"></div>
+      <div class="l1-body">
+        <div class="l1-left"  id="l1Left"></div>
+        <div class="l1-right" id="l1Right" onclick="navigate('level2')"></div>
+      </div>
+      <div class="l1-footer">AI Generated Insights</div>
+    </div>
   </div>
 
-  <button class="btn-crash" onclick="simulateCrash()">💥 Simulate Crash</button>
+  <!-- ════ LEVEL 2 – Human Impact ════ -->
+  <div id="level2" class="level">
+    <button class="btn-back" onclick="navigate('level1')">← Back</button>
+    <div class="level-bg"><canvas id="netCanvas2"></canvas></div>
+    <div class="level-content">
+      <div class="l2-header" id="l2Header"></div>
+      <div class="l2-body"   id="l2Body"></div>
+      <div class="l2-footer">AI Powered Insights for a Better Tomorrow</div>
+    </div>
+    <div id="l2ScanLine"></div>
+  </div>
 
   <script>
-    // ─────────────────────────────────────────────
-    //  Heartbeat kill flag
-    // ─────────────────────────────────────────────
-    let killed = false;
-
-    // ─────────────────────────────────────────────
-    //  KPI data
-    // ─────────────────────────────────────────────
-    const kpis = [
-      { id: 'sme',       label: 'SME Score',       value: 94,  unit: '%' },
-      { id: 'revenue',   label: 'Revenue',         value: 1.2, unit: 'M' },
-      { id: 'churn',     label: 'Churn Rate',      value: 3.7, unit: '%' },
-    ];
-
-    // ─────────────────────────────────────────────
-    //  Render cards
-    // ─────────────────────────────────────────────
-    const grid = document.querySelector('.card-grid');
-
-    kpis.forEach((kpi) => {
-      const card = document.createElement('div');
-      card.className = 'kpi-card';
-      card.dataset.id = kpi.id;
-      card.innerHTML = `
-        <div class="value">${kpi.value}<span class="unit">${kpi.unit}</span></div>
-        <div class="label">${kpi.label}</div>
-      `;
-      card.addEventListener('click', () => selectKpi(kpi, card));
-      grid.appendChild(card);
-    });
-
-    // ─────────────────────────────────────────────
-    //  Card click → postMessage to Shell
-    //  First click  = KPI_SELECTED (highlight + data)
-    //  Second click on same card = KPI_FOCUSED (fullscreen)
-    // ─────────────────────────────────────────────
-    let currentSelectedId = null;
-
-    function selectKpi(kpi, cardEl) {
-      const isAlreadySelected = (currentSelectedId === kpi.id);
-
-      // Visual feedback
-      document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('selected'));
-      cardEl.classList.add('selected');
-
-      const messageType = isAlreadySelected ? 'KPI_FOCUSED' : 'KPI_SELECTED';
-      currentSelectedId = kpi.id;
-
-      const message = {
-        type:    messageType,
-        target:  'SHELL',
-        payload: { id: kpi.id, value: kpi.value },
+    // ── Seeded PRNG (Mulberry32) ──────────────────────
+    function rng(seed) {
+      return function() {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
       };
-
-      window.parent.postMessage(message, '*');
-
-      const label = isAlreadySelected
-        ? `🔍 Sent KPI_FOCUSED (double-select) → id: "${kpi.id}"`
-        : `✅ Sent KPI_SELECTED → id: "${kpi.id}", value: ${kpi.value}`;
-      setStatus(label);
-      console.log('[KPI App] postMessage sent:', message);
     }
 
-    // ─────────────────────────────────────────────
-    //  Inbound messages from Shell
-    // ─────────────────────────────────────────────
-    window.addEventListener('message', (event) => {
-      const data = event.data;
-      if (!data || !data.type) return;
+    // ── Mode (signage vs interactive) ─────────────────
+    const _params     = new URLSearchParams(location.search);
+    const MODE        = _params.get('mode') ?? 'interactive';
+    const IS_SIGNAGE  = MODE === 'signage';
 
-      // ── Heartbeat: respond to PING with PONG ──
-      if (data.type === 'PING') {
-        if (!killed) {
-          window.parent.postMessage(
-            { type: 'PONG', target: 'SHELL', payload: { app: 'KPI_APP', ts: Date.now() } },
-            '*',
-          );
-        }
-        return; // silent — don't log PINGs
+    // Signage timing — driven by ?interval=N (seconds), default 15
+    const _intervalSec  = Math.max(5, parseInt(_params.get('interval') ?? '15', 10));
+    const SIGNAGE_L0_MS = _intervalSec * 1000;   // overview hold
+    const SIGNAGE_L1_MS = _intervalSec * 1000;   // level-1 hold
+    const SIGNAGE_L2_MS = _intervalSec * 1000;   // level-2 hold
+
+    // ── State ─────────────────────────────────────────
+    let killed = false, kpiData = [], activeKpi = null, currentSelectedId = null;
+    let signageTimer = null, signageKpiIndex = 0;
+
+    // ── Navigation ────────────────────────────────────
+    // ── L2 scan line (JS-driven, appended to body) ────
+    const _l2Scan = document.getElementById('l2ScanLine');
+    let _l2ScanTimer = null;
+    function startL2Scan() {
+      clearTimeout(_l2ScanTimer);
+      const level2El = document.getElementById('level2');
+      const DUR = 4000, GAP = 100;
+      function pass() {
+        if (!level2El.classList.contains('active')) return;
+        _l2Scan.style.display = 'block';
+        _l2Scan.style.transition = 'none';
+        _l2Scan.style.top = '-60px';
+        _l2Scan.offsetHeight;
+        _l2Scan.style.transition = `top ${DUR}ms linear`;
+        _l2Scan.style.top = (level2El.offsetHeight + 60) + 'px';
+        _l2ScanTimer = setTimeout(pass, DUR + GAP);
+      }
+      pass();
+    }
+    function stopL2Scan() {
+      clearTimeout(_l2ScanTimer);
+      _l2Scan.style.display = 'none';
+    }
+
+    function navigate(id) {
+      if (id === 'level2' && activeKpi) renderLevel2(activeKpi);
+      else stopL2Scan();
+      document.querySelectorAll('.level').forEach(l => l.classList.remove('active','level-fade'));
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      requestAnimationFrame(() => el.classList.add('level-fade'));
+      if (id === 'level2') startL2Scan();
+    }
+
+    // ══════════════════════════════════════════════════
+    //  BG 0 – 3D Star Constellation (Canvas)
+    //  Stars projected in 3D with perspective, slow
+    //  Y-axis rotation, constellation lines, twinkling,
+    //  diffraction spikes, and signal pulses.
+    // ══════════════════════════════════════════════════
+    function initNetwork(canvasId, cfg) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx    = canvas.getContext('2d');
+
+      const starClrs  = cfg.starClrs;
+      const pulseClrs = cfg.pulseClrs;
+
+      const FOCAL  = 500;  // perspective focal length (px)
+      const CONN_D = 210;  // max constellation-line distance (screen px)
+      let stars = [], bgStars = [], pulses = [], edges = [];
+      let raf, rotY = 0, rotX = 0, scanY = 0, hueShift = 0;
+      let sun = null, sunCooldown = cfg.sunCoolBase;
+
+      function buildStars(W, H) {
+        const TOTAL = 120, BRIGHT = 22;
+        stars = Array.from({ length: TOTAL }, (_, i) => {
+          // Frustum-aware placement: generate x3/y3 so the star projects
+          // anywhere on screen at its z depth — full coverage guaranteed.
+          const z3  = (Math.random() - .5) * 520;
+          const sc  = FOCAL / Math.max(10, FOCAL + z3);
+          return {
+            x3: ((Math.random() - .5) * W / sc) * .93,
+            y3: ((Math.random() - .5) * H / sc) * .93,
+            z3,
+            // Independent slow drift so stars never permanently cluster
+            vx: (Math.random() - .5) * .12,
+            vy: (Math.random() - .5) * .10,
+            vz: (Math.random() - .5) * .07,
+            baseR: i < BRIGHT ? Math.random() * 3 + 3.5 : Math.random() * 1.5 + 0.8,
+            phase: Math.random() * Math.PI * 2,
+            twinkle: .03 + Math.random() * .05,
+            clr: starClrs[Math.floor(Math.random() * starClrs.length)],
+            pClr: pulseClrs[Math.floor(Math.random() * pulseClrs.length)],
+            bright: i < BRIGHT,
+          };
+        });
+        // Dense static background starfield
+        bgStars = Array.from({ length: 380 }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * .85 + .12,
+          a: Math.random() * .5 + .1,
+        }));
+        pulses = [];
       }
 
-      // ── KILL: stop responding to PINGs ──
-      if (data.type === 'KILL') {
-        killed = true;
-        console.error('[KPI App] KILL received — stopped responding to PINGs');
-        setStatus('☠️ KILL received — app is dead (ignoring heartbeats)');
-        document.body.style.opacity = '0.4';
-        document.body.style.pointerEvents = 'none';
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        buildStars(canvas.width, canvas.height);
+      }
+      window.addEventListener('resize', resize);
+
+      // Project a 3D point to 2D screen with Y+X axis rotation
+      function proj3D(x3, y3, z3, W, H) {
+        const cy = Math.cos(rotY), sy = Math.sin(rotY);
+        const cx = Math.cos(rotX), sx = Math.sin(rotX);
+        const rx  = x3 * cy - z3 * sy;
+        const rz  = x3 * sy + z3 * cy;
+        const ry  = y3 * cx - rz * sx;
+        const rz2 = y3 * sx + rz * cx;
+        const sc  = FOCAL / Math.max(10, FOCAL + rz2);
+        return { sx: W / 2 + rx * sc, sy: H / 2 + ry * sc, depth: rz2, sc };
+      }
+
+      function draw() {
+        const W = canvas.width, H = canvas.height;
+        if (!W || !H) { raf = requestAnimationFrame(draw); return; }
+
+        // Deep space base — hue cycles slowly through palette
+        hueShift = (hueShift + .055) % 360;
+        const bgHue = cfg.bgHueBase + Math.sin(hueShift * .018) * cfg.bgHueRange;
+        ctx.fillStyle = `hsl(${bgHue},${cfg.bgSat}%,${cfg.bgLit}%)`;
+        ctx.fillRect(0, 0, W, H);
+
+        // Nebula / galaxy haze (blobs, hue drifts at different speeds)
+        cfg.nebulaHues.forEach(({ x: xf, y: yf, r: rf, h, sp, a }) => {
+          const x = W * xf, y = H * yf, r = W * rf;
+          const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, `hsla(${(h + hueShift * sp) % 360},72%,46%,${a})`);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        });
+
+        // Static background starfield
+        bgStars.forEach(s => {
+          ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // ── Deep-space sun: spawn & draw illumination / rays ──────────
+        sunCooldown--;
+        if (!sun && sunCooldown <= 0) {
+          sun = {
+            x:       W * (.10 + Math.random() * .80),
+            y:       H * (.03 + Math.random() * .11),
+            life:    0,
+            maxLife: 720 + Math.random() * 420,
+            r:       8  + Math.random() * 7,
+            hue:     cfg.sunHueBase + Math.random() * cfg.sunHueRange,
+            rays: Array.from({ length: 18 }, () => ({
+              angle: Math.PI/2 + (Math.random()-.5)*Math.PI*1.85,
+              len:   .65 + Math.random() * .70,
+              w:     1.2 + Math.random() * 3.5,
+              al:    .32 + Math.random() * .48,
+            })),
+          };
+          sunCooldown = cfg.sunCoolBase + Math.random() * cfg.sunCoolBase;
+        }
+
+        if (sun) {
+          sun.life++;
+          const t     = sun.life / sun.maxLife;
+          if (t >= 1) { sun = null; }
+          else {
+            // Fade envelope: ease-in 10 %, plateau, ease-out 14 %
+            const fade = t < .10 ? t / .10 : t > .86 ? (1 - t) / .14 : 1;
+            // Deep-space approach: size grows from 3 % → 100 % over first 45 % of life
+            const appT  = Math.min(1, t / .45);
+            const appE  = 1 - Math.pow(1 - appT, 3);
+            const curR  = sun.r * (.03 + .97 * appE); // emerges from a point
+            const sx    = sun.x;
+            const sy    = sun.y;
+
+            // Rays build up smoothly from the start of approach
+            const rayFade = fade * appE;
+
+            // 1. Space fill — wide warm radial glow flooding the scene
+            const fillR = Math.max(W, H) * .95;
+            const gFill = ctx.createRadialGradient(sx, sy, 0, sx, sy, fillR);
+            gFill.addColorStop(0,   `hsla(${sun.hue},95%,72%,${(.22*rayFade).toFixed(3)})`);
+            gFill.addColorStop(.18, `hsla(${sun.hue+8},88%,58%,${(.10*rayFade).toFixed(3)})`);
+            gFill.addColorStop(.50, `hsla(${sun.hue+15},80%,45%,${(.04*rayFade).toFixed(3)})`);
+            gFill.addColorStop(1,   'rgba(0,0,0,0)');
+            ctx.fillStyle = gFill; ctx.fillRect(0, 0, W, H);
+
+            // 2. God-ray beams — vibrant gradient triangles, wide fan downward
+            sun.rays.forEach(ray => {
+              const len  = Math.min(W, H) * ray.len * appE;
+              const ex   = sx + Math.cos(ray.angle) * len;
+              const ey   = sy + Math.sin(ray.angle) * len;
+              const perp = ray.angle + Math.PI / 2;
+              const hw   = ray.w * appE;
+              const gRay = ctx.createLinearGradient(sx, sy, ex, ey);
+              gRay.addColorStop(0,   `hsla(${sun.hue+5},98%,88%,${(ray.al*rayFade).toFixed(3)})`);
+              gRay.addColorStop(.55, `hsla(${sun.hue+18},92%,68%,${(ray.al*.45*rayFade).toFixed(3)})`);
+              gRay.addColorStop(1,   'rgba(0,0,0,0)');
+              ctx.beginPath();
+              ctx.moveTo(sx + Math.cos(perp)*hw, sy + Math.sin(perp)*hw);
+              ctx.lineTo(ex, ey);
+              ctx.lineTo(sx - Math.cos(perp)*hw, sy - Math.sin(perp)*hw);
+              ctx.closePath();
+              ctx.fillStyle = gRay;
+              ctx.fill();
+            });
+
+            // Store runtime values for disk-draw pass (rendered above stars)
+            sun._sx = sx; sun._sy = sy; sun._fade = fade; sun._r = curR;
+          }
+        }
+        // ───────────────────────────────────────────────────────────────
+
+        // Advance slow 3D rotation
+        rotY += .00015;
+        rotX  = Math.sin(rotY * .4) * .07;
+
+        // Drift stars independently — prevents clustering at any rotation angle
+        stars.forEach(s => {
+          s.x3 += s.vx; s.y3 += s.vy; s.z3 += s.vz;
+          // Soft bounce: keep z in a range where perspective stays reasonable
+          if (Math.abs(s.z3) > 245) s.vz *= -1;
+          // Bounce x/y at screen-relative limits
+          if (Math.abs(s.x3) > W * .78) s.vx *= -1;
+          if (Math.abs(s.y3) > H * .78) s.vy *= -1;
+        });
+
+        // Project all stars, update twinkle
+        const proj = stars.map((s, i) => {
+          s.phase += s.twinkle;
+          const p  = proj3D(s.x3, s.y3, s.z3, W, H);
+          const df = Math.max(.25, Math.min(1.6, FOCAL / (FOCAL + p.depth + 300) * 2.2));
+          return { s, i, ...p, df };
+        }).filter(p => p.sx > -80 && p.sx < W + 80 && p.sy > -80 && p.sy < H + 80);
+
+        // Build constellation lines — max 3 connections per star, min spacing 50 px
+        // (sort by distance, wire closest pairs first → natural constellation look)
+        const connCount = new Array(proj.length).fill(0);
+        const MAX_CONN = 3, MIN_D = 50;
+        const pairs = [];
+        for (let a = 0; a < proj.length; a++) {
+          for (let b = a + 1; b < proj.length; b++) {
+            const pa = proj[a], pb = proj[b];
+            const dx = pb.sx - pa.sx, dy = pb.sy - pa.sy;
+            const d  = Math.sqrt(dx * dx + dy * dy);
+            if (d > MIN_D && d < CONN_D) pairs.push({ a, b, d, pa, pb });
+          }
+        }
+        pairs.sort((x, y) => x.d - y.d);
+        edges = [];
+        pairs.forEach(({ a, b, d, pa, pb }) => {
+          if (connCount[a] >= MAX_CONN || connCount[b] >= MAX_CONN) return;
+          connCount[a]++; connCount[b]++;
+          edges.push({ ai: pa.i, bi: pb.i });
+          const alpha = (1 - d / CONN_D) * .28 * Math.min(pa.df, pb.df);
+          const [lr, lg, lb] = cfg.lineClr;
+          ctx.strokeStyle = `rgba(${lr},${lg},${lb},${alpha.toFixed(3)})`;
+          ctx.lineWidth   = .7;
+          ctx.beginPath(); ctx.moveTo(pa.sx, pa.sy); ctx.lineTo(pb.sx, pb.sy); ctx.stroke();
+        });
+
+        // Spawn signal pulses along constellation lines
+        if (pulses.length < 22 && Math.random() < .07 && edges.length > 0) {
+          const e = edges[Math.floor(Math.random() * edges.length)];
+          pulses.push({ ai: e.ai, bi: e.bi, t: 0,
+                        speed: .003 + Math.random() * .006,
+                        clr: stars[e.ai].pClr });
+        }
+
+        // Draw pulses (re-project each frame to follow rotation)
+        pulses = pulses.filter(p => {
+          p.t += p.speed;
+          if (p.t > 1) return false;
+          const pa = proj3D(stars[p.ai].x3, stars[p.ai].y3, stars[p.ai].z3, W, H);
+          const pb = proj3D(stars[p.bi].x3, stars[p.bi].y3, stars[p.bi].z3, W, H);
+          const px = pa.sx + (pb.sx - pa.sx) * p.t;
+          const py = pa.sy + (pb.sy - pa.sy) * p.t;
+          const gH = ctx.createRadialGradient(px, py, 0, px, py, 12);
+          gH.addColorStop(0,   `rgba(${p.clr},.55)`);
+          gH.addColorStop(.4,  `rgba(${p.clr},.12)`);
+          gH.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.fillStyle = gH; ctx.beginPath(); ctx.arc(px, py, 12, 0, Math.PI * 2); ctx.fill();
+          const gC = ctx.createRadialGradient(px, py, 0, px, py, 3.5);
+          gC.addColorStop(0, 'rgba(255,255,255,1)');
+          gC.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gC; ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill();
+          return true;
+        });
+
+        // Draw stars (glow → gradient core → diffraction spikes on bright ones)
+        proj.forEach(({ s, sx, sy, df }) => {
+          const tw = .75 + .25 * Math.sin(s.phase);
+          const r  = s.baseR * df * tw;
+          const al = Math.min(1, df * tw);
+
+          // Soft outer glow
+          const glowR = r * (s.bright ? 6 : 3.8);
+          const gg = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
+          gg.addColorStop(0, `rgba(${s.clr},${(al * .42).toFixed(3)})`);
+          gg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(sx, sy, glowR, 0, Math.PI * 2); ctx.fill();
+
+          // Star core: bright white centre → star colour
+          const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+          sg.addColorStop(0,    `rgba(255,255,255,${al.toFixed(3)})`);
+          sg.addColorStop(.45,  `rgba(${s.clr},${al.toFixed(3)})`);
+          sg.addColorStop(1,    'rgba(0,0,0,0)');
+          ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+
+          // 4-pointed diffraction spikes on bright stars
+          if (s.bright && r > 2.5) {
+            ctx.strokeStyle = `rgba(${s.clr},${(al * .45).toFixed(3)})`;
+            ctx.lineWidth   = .6;
+            const sp = r * 5.5;
+            ctx.beginPath();
+            ctx.moveTo(sx - sp, sy); ctx.lineTo(sx + sp, sy);
+            ctx.moveTo(sx, sy - sp); ctx.lineTo(sx, sy + sp);
+            ctx.stroke();
+          }
+        });
+
+        // ── Sun disk + corona + futuristic rings (above stars) ────────
+        if (sun && sun._sx !== undefined) {
+          const { _sx: sx, _sy: sy, _fade: fade, _r: r, hue } = sun;
+
+          // Wide warm corona
+          const coronaR = r * 11;
+          const gCor = ctx.createRadialGradient(sx, sy, r * .4, sx, sy, coronaR);
+          gCor.addColorStop(0,   `hsla(${hue},100%,88%,${(.78*fade).toFixed(3)})`);
+          gCor.addColorStop(.30, `hsla(${hue+12},92%,72%,${(.32*fade).toFixed(3)})`);
+          gCor.addColorStop(.65, `hsla(${hue+22},85%,55%,${(.10*fade).toFixed(3)})`);
+          gCor.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.fillStyle = gCor;
+          ctx.beginPath(); ctx.arc(sx, sy, coronaR, 0, Math.PI*2); ctx.fill();
+
+          // Futuristic energy rings — warm amber tones, pulsing
+          const pulseAmp = .5 + .5 * Math.sin(sun.life * .08);
+          [1.8, 2.8, 4.2].forEach((rf, ri) => {
+            const rr = r * rf + pulseAmp * (ri+1) * .6;
+            ctx.strokeStyle = `hsla(${hue+ri*10},100%,82%,${((.48 - ri*.12)*fade).toFixed(3)})`;
+            ctx.lineWidth   = .8 - ri * .15;
+            ctx.beginPath(); ctx.arc(sx, sy, rr, 0, Math.PI*2); ctx.stroke();
+          });
+
+          // Lens-flare cross (horizontal + short vertical)
+          const spikeL = r * 10;
+          const gSpike = ctx.createLinearGradient(sx - spikeL, sy, sx + spikeL, sy);
+          gSpike.addColorStop(0,   'rgba(0,0,0,0)');
+          gSpike.addColorStop(.5,  `hsla(50,100%,96%,${(.85*fade).toFixed(3)})`);
+          gSpike.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.strokeStyle = gSpike; ctx.lineWidth = .7;
+          ctx.beginPath(); ctx.moveTo(sx - spikeL, sy); ctx.lineTo(sx + spikeL, sy); ctx.stroke();
+          const gSpike2 = ctx.createLinearGradient(sx, sy - spikeL*.4, sx, sy + spikeL*.4);
+          gSpike2.addColorStop(0,   'rgba(0,0,0,0)');
+          gSpike2.addColorStop(.5,  `hsla(50,100%,96%,${(.55*fade).toFixed(3)})`);
+          gSpike2.addColorStop(1,   'rgba(0,0,0,0)');
+          ctx.strokeStyle = gSpike2; ctx.lineWidth = .5;
+          ctx.beginPath(); ctx.moveTo(sx, sy - spikeL*.4); ctx.lineTo(sx, sy + spikeL*.4); ctx.stroke();
+
+          // Sun disk — saturated warm core
+          const gDisk = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+          gDisk.addColorStop(0,   `hsla(52,100%,99%,${fade.toFixed(3)})`);
+          gDisk.addColorStop(.40, `hsla(${hue+20},100%,92%,${(.98*fade).toFixed(3)})`);
+          gDisk.addColorStop(.80, `hsla(${hue+5},96%,78%,${(.90*fade).toFixed(3)})`);
+          gDisk.addColorStop(1,   `hsla(${hue-5},90%,60%,${(.85*fade).toFixed(3)})`);
+          ctx.fillStyle = gDisk;
+          ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+        }
+        // ───────────────────────────────────────────────────────────────
+
+        // Subtle HUD scan line
+        const [scanR, scanG, scanB] = cfg.scanClr;
+        scanY = (scanY + .35) % (H + 60);
+        const sgl = ctx.createLinearGradient(0, scanY - 35, 0, scanY + 35);
+        sgl.addColorStop(0,   `rgba(${scanR},${scanG},${scanB},0)`);
+        sgl.addColorStop(.5,  `rgba(${scanR},${scanG},${scanB},.044)`);
+        sgl.addColorStop(1,   `rgba(${scanR},${scanG},${scanB},0)`);
+        ctx.fillStyle = sgl; ctx.fillRect(0, scanY - 35, W, 70);
+
+        raf = requestAnimationFrame(draw);
+      }
+
+      if (raf) cancelAnimationFrame(raf);
+      requestAnimationFrame(() => { resize(); raf = requestAnimationFrame(draw); });
+    }
+
+
+    // ── Level palette configs ─────────────────────────────────────────
+    const L0_CFG = {
+      starClrs:  [[200,225,255],[220,238,255],[255,255,255],[255,252,230],[255,248,200],[180,212,255]],
+      pulseClrs: [[0,220,255],[110,80,255],[0,200,210],[160,140,255]],
+      bgHueBase:225, bgHueRange:32, bgSat:96, bgLit:2.4,
+      nebulaHues:[
+        {x:.50,y:.50,r:.62,h:228,sp:.9, a:.075},
+        {x:.18,y:.36,r:.34,h:260,sp:.7, a:.055},
+        {x:.82,y:.64,r:.30,h:205,sp:1.1,a:.050},
+        {x:.60,y:.82,r:.22,h:310,sp:.5, a:.045},
+      ],
+      lineClr:[170,210,255], sunHueBase:12, sunHueRange:32, sunCoolBase:1800, scanClr:[0,160,255],
+    };
+    const L1_CFG = {
+      starClrs:  [[180,255,240],[140,255,220],[200,255,255],[255,255,255],[100,230,210],[160,255,240]],
+      pulseClrs: [[0,255,200],[0,210,180],[80,255,220],[0,240,160]],
+      bgHueBase:185, bgHueRange:25, bgSat:90, bgLit:2.2,
+      nebulaHues:[
+        {x:.50,y:.50,r:.62,h:168,sp:.9, a:.070},
+        {x:.20,y:.35,r:.34,h:195,sp:.7, a:.050},
+        {x:.80,y:.65,r:.30,h:155,sp:1.1,a:.048},
+        {x:.60,y:.80,r:.22,h:210,sp:.5, a:.042},
+      ],
+      lineClr:[100,240,220], sunHueBase:165, sunHueRange:30, sunCoolBase:1800, scanClr:[0,210,180],
+    };
+    const L2_CFG = {
+      starClrs:  [[255,220,180],[255,200,160],[255,255,255],[255,240,200],[220,160,255],[255,210,210]],
+      pulseClrs: [[255,80,120],[200,60,255],[255,120,60],[180,0,255]],
+      bgHueBase:270, bgHueRange:30, bgSat:88, bgLit:2.0,
+      nebulaHues:[
+        {x:.50,y:.50,r:.62,h:270,sp:.9, a:.070},
+        {x:.22,y:.38,r:.34,h:300,sp:.7, a:.055},
+        {x:.78,y:.62,r:.30,h:255,sp:1.1,a:.048},
+        {x:.62,y:.80,r:.22,h:340,sp:.5, a:.045},
+      ],
+      lineClr:[255,160,220], sunHueBase:330, sunHueRange:30, sunCoolBase:1800, scanClr:[255,80,140],
+    };
+    // ── Boot ──────────────────────────────────────────
+    fetch('./kpi-data.json')
+      .then(r => r.json())
+      .then(d => { kpiData = d.kpis; boot(); })
+      .catch(() => { kpiData = FALLBACK.kpis; boot(); });
+
+    function boot() {
+      if (IS_SIGNAGE) document.body.classList.add('signage-mode');
+      renderLevel0();
+      initNetwork('netCanvas',  L0_CFG);
+      initNetwork('netCanvas1', L1_CFG);
+      initNetwork('netCanvas2', L2_CFG);
+      if (IS_SIGNAGE) startSignageCycle();
+    }
+
+    // ── Signage autoplay cycle ─────────────────────────
+    // Overview (15s) → Level-1 KPI[n] (15s) → Level-2 KPI[n] (15s) → repeat next KPI
+    function startSignageCycle() {
+      function showOverview() {
+        navigate('level0');
+        signageTimer = setTimeout(showNextKpi, SIGNAGE_L0_MS);
+      }
+
+      function showNextKpi() {
+        const kpi = kpiData[signageKpiIndex % kpiData.length];
+        signageKpiIndex++;
+        // selectKpi also fires postMessage to AI panel
+        selectKpi(kpi);
+        signageTimer = setTimeout(showLevel2, SIGNAGE_L1_MS);
+      }
+
+      function showLevel2() {
+        navigate('level2');
+        signageTimer = setTimeout(showOverview, SIGNAGE_L2_MS);
+      }
+
+      // Start: show overview first, then begin cycling
+      signageTimer = setTimeout(showNextKpi, SIGNAGE_L0_MS);
+    }
+
+    // ── Count-up helper ───────────────────────────────
+    function animateCount(el, raw, unit) {
+      const num = parseFloat(String(raw).replace(/[^0-9.]/g, ''));
+      if (isNaN(num)) return;
+      const suffix = String(raw).replace(/^[\d.]+/, ''); // e.g. "M"
+      const dur = 1500, start = performance.now();
+      const tick = now => {
+        const t    = Math.min(1, (now - start) / dur);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const cur  = Math.round(num * ease);
+        el.innerHTML = cur + suffix + (unit ? `<span class="kpi-unit"> ${unit}</span>` : '');
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    // ── Render Level 0 ────────────────────────────────
+    function renderLevel0() {
+      const row = document.getElementById('kpiRow');
+      row.innerHTML = '';
+      kpiData.forEach(kpi => {
+        const card = document.createElement('div');
+        card.className = 'kpi-card';
+        // Placeholder zero while count-up runs
+        const unitSpan = kpi.unit ? `<span class="kpi-unit"> ${kpi.unit}</span>` : '';
+        card.innerHTML = `
+          <div class="kpi-value">0${unitSpan}</div>
+          <div class="kpi-label">${kpi.label}</div>
+          <div class="tap-hint">Tap to explore AI insight</div>`;
+        card.addEventListener('click', () => selectKpi(kpi));
+        row.appendChild(card);
+        // Stagger count-up to match card entrance delay
+        const delay = [80, 220, 360][row.children.length - 1] ?? 0;
+        setTimeout(() => animateCount(card.querySelector('.kpi-value'), kpi.value, kpi.unit), delay + 300);
+      });
+    }
+
+    // ── Select KPI → Level 1 ─────────────────────────
+    function selectKpi(kpi) {
+      activeKpi = kpi;
+      const msgType = currentSelectedId === kpi.id ? 'KPI_FOCUSED' : 'KPI_SELECTED';
+      currentSelectedId = kpi.id;
+      window.parent.postMessage({ type: msgType, target: 'SHELL', payload: { id: kpi.id, value: kpi.value } }, '*');
+      renderLevel1(kpi);
+      navigate('level1');
+    }
+
+    // ── Matrix typing reveal ──────────────────────────
+    function matrixReveal(el, delay) {
+      const finalHTML = el.innerHTML;
+      const text = el.textContent;
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>[]{}|';
+      let iter = 0;
+      setTimeout(() => {
+        const id = setInterval(() => {
+          el.textContent = Array.from(text, (c, i) => {
+            if (' :,.+-/'.includes(c)) return c;
+            return i < Math.floor(iter) ? c : chars[Math.floor(Math.random() * chars.length)];
+          }).join('');
+          iter += 0.7;
+          if (Math.floor(iter) >= text.length) { clearInterval(id); el.innerHTML = finalHTML; }
+        }, 28);
+      }, delay);
+    }
+
+    // ── SVG animated line chart ───────────────────────
+    function buildLineChart(projection, chartPoints) {
+      const inputPts = chartPoints && chartPoints.length === 5 ? chartPoints : [12, 24, 36, 42, 45];
+      const years = ['2021','2022','2023','2024','2025'];
+      const data = inputPts.map((pct, i) => ({ year: years[i], pct, forecast: i === 4 }));
+      const W=300, H=230, pl=24, pr=10, pt=24, pb=40;
+      const cw=W-pl-pr, ch=H-pt-pb;
+      const n=data.length;
+      const barW=cw/n, gap=barW*0.28, bw=barW-gap;
+      const xc = i => pl + i*barW + gap/2 + bw/2;
+      const xl = i => pl + i*barW + gap/2;
+      const barH = v => (v/52)*ch;
+      const barY = v => pt+ch-barH(v);
+      const pts = data.map((d,i) => ({x:xc(i), y:barY(d.pct)}));
+      const bottomY = pt+ch;
+
+      const grid = [13,26,39,52].map(v => {
+        const gy = barY(v).toFixed(1);
+        return `<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="rgba(0,210,180,.07)" stroke-width="1" stroke-dasharray="4,5"/>`;
+      }).join('');
+
+      const bars = data.map((d,i) => {
+        const x=xl(i).toFixed(1), bwf=bw.toFixed(1);
+        const bh=barH(d.pct).toFixed(1), by=barY(d.pct).toFixed(1);
+        const fId=d.forecast?'barGradGold':'barGradTeal';
+        const glow=d.forecast?'#fbbf24':'#00e8c0';
+        const delay=(0.12+i*0.13).toFixed(2);
+        return `<rect x="${x}" y="${bottomY}" width="${bwf}" height="0" rx="3" fill="url(#${fId})">
+          <animate attributeName="height" from="0" to="${bh}" dur="0.65s" begin="${delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+          <animate attributeName="y" from="${bottomY}" to="${by}" dur="0.65s" begin="${delay}s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+        </rect>
+        <rect x="${x}" y="${by}" width="${bwf}" height="3" rx="2" fill="${glow}" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" dur="0.3s" begin="${(parseFloat(delay)+0.6).toFixed(2)}s" fill="freeze"/>
+        </rect>`;
+      }).join('');
+
+      const valTxt = data.map((d,i) => {
+        const x=xc(i).toFixed(1), y=(barY(d.pct)-8).toFixed(1);
+        const color=d.forecast?'#fbbf24':'rgba(0,230,200,.9)';
+        const delay=(0.72+i*0.13).toFixed(2);
+        return `<text x="${x}" y="${y}" fill="${color}" font-size="14" text-anchor="middle" font-family="monospace" opacity="0">
+          <animate attributeName="opacity" from="0" to="1" dur="0.35s" begin="${delay}s" fill="freeze"/>
+          ${d.pct}%
+        </text>`;
+      }).join('');
+
+      const yearTxt = data.map((d,i) => {
+        const x=xc(i).toFixed(1), y=(bottomY+18).toFixed(1);
+        const color=d.forecast?'rgba(251,191,36,.8)':'rgba(0,200,170,.5)';
+        return `<text x="${x}" y="${y}" fill="${color}" font-size="12.6" text-anchor="middle" font-family="monospace">${d.year}${d.forecast?'*':''}</text>`;
+      }).join('');
+
+      const kt='0;0.08;0.23;0.31;0.46;0.54;0.69;0.77;0.92;1';
+      const ks='0 0 1 1;0.4 0 0.6 1;0 0 1 1;0.4 0 0.6 1;0 0 1 1;0.4 0 0.6 1;0 0 1 1;0.4 0 0.6 1;0 0 1 1';
+      const cxK=pts.flatMap((p,i)=>i<pts.length-1?[p.x.toFixed(1),p.x.toFixed(1)]:[p.x.toFixed(1),p.x.toFixed(1)]).join(';');
+      const cyK=pts.flatMap((p,i)=>i<pts.length-1?[p.y.toFixed(1),p.y.toFixed(1)]:[p.y.toFixed(1),p.y.toFixed(1)]).join(';');
+      const ball=`<g filter="url(#barGlow)">
+        <circle r="13" fill="rgba(251,191,36,.15)">
+          <animate attributeName="cx" values="${cxK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+          <animate attributeName="cy" values="${cyK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+        </circle>
+        <circle r="5.5" fill="#fbbf24">
+          <animate attributeName="cx" values="${cxK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+          <animate attributeName="cy" values="${cyK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+        </circle>
+        <circle r="2.5" fill="white">
+          <animate attributeName="cx" values="${cxK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+          <animate attributeName="cy" values="${cyK}" keyTimes="${kt}" keySplines="${ks}" dur="10s" begin="2.5s" repeatCount="indefinite" calcMode="spline"/>
+        </circle>
+      </g>`;
+
+      return `
+        <div class="chart-title" style="font-family:monospace;letter-spacing:.1em;font-size:clamp(.87rem,1.54vw,1.04rem)">GROWTH TREND</div>
+        <div class="chart-projection" style="opacity:0"><span class="proj-num">${projection}</span><span class="proj-label">Projection</span></div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:clamp(190px,38vh,300px);overflow:visible;display:block">
+          <defs>
+            <linearGradient id="barGradTeal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00e8c0" stop-opacity=".95"/>
+              <stop offset="100%" stop-color="#00e8c0" stop-opacity=".2"/>
+            </linearGradient>
+            <linearGradient id="barGradGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fbbf24" stop-opacity=".95"/>
+              <stop offset="100%" stop-color="#fbbf24" stop-opacity=".2"/>
+            </linearGradient>
+            <linearGradient id="lcScanGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(0,232,192,0)"/>
+              <stop offset="50%" stop-color="rgba(0,232,192,.35)"/>
+              <stop offset="100%" stop-color="rgba(0,232,192,0)"/>
+            </linearGradient>
+            <filter id="barGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          ${grid}
+          <g filter="url(#barGlow)">${bars}</g>
+          ${valTxt}
+          <rect x="0" y="${pt}" width="1.5" height="${ch}" fill="url(#lcScanGrad)" opacity=".75">
+            <animateTransform attributeName="transform" type="translate" from="${pl},0" to="${W-pr},0" dur="2.8s" repeatCount="indefinite"/>
+          </rect>
+          ${ball}
+        </svg>
+        <div class="chart-cta">Click to explore Human Impact →</div>`;
+    }
+
+    // ── L1 cycle: count-up → matrix reveal → 8× red scan → fade → repeat ─
+    function runL1Cycle(numSpan, rawVal, labelEl, bulletsUl) {
+      const items  = Array.from(bulletsUl.querySelectorAll('li'));
+      const target = parseInt(rawVal) || 0;
+      const valSuffix = String(rawVal).replace(/^[\d.]+/, ''); // e.g. "M"
+      const leftPanel = bulletsUl.closest('.l1-left') || bulletsUl.parentElement;
+
+      function reset() {
+        numSpan.style.transition = ''; numSpan.style.opacity = '1'; numSpan.textContent = '0' + valSuffix;
+        labelEl.style.transition = ''; labelEl.style.opacity = '0';
+        items.forEach(li => { li.style.transition=''; li.style.opacity='0'; li.style.transform='translateX(-38px)'; });
+        leftPanel.querySelectorAll('.l1-scan').forEach(s => s.remove());
+      }
+
+      function runScanLines(onDone) {
+        if (!leftPanel.isConnected) return;
+        // Measure text bounds relative to leftPanel
+        const panelRect = leftPanel.getBoundingClientRect();
+        const topEl = numSpan.closest('.l1-kpi-big') || numSpan;
+        const botEl = items.length ? items[items.length - 1] : bulletsUl;
+        const startPx = topEl.getBoundingClientRect().top  - panelRect.top - 6;
+        const endPx   = leftPanel.getBoundingClientRect().height;
+
+        const scanEl = document.createElement('div');
+        scanEl.className = 'l1-scan';
+        leftPanel.appendChild(scanEl);
+
+        const NUM = 3, DUR = 4680, GAP = 0;
+        let i = 0;
+        function next() {
+          if (!scanEl.isConnected || i >= NUM) { scanEl.remove(); onDone && onDone(); return; }
+          scanEl.style.transition = 'none'; scanEl.style.top = startPx + 'px';
+          scanEl.offsetHeight; // reflow
+          scanEl.style.transition = `top ${DUR}ms linear`;
+          scanEl.style.top = endPx + 'px';
+          i++; setTimeout(next, DUR + GAP);
+        }
+        next();
+      }
+
+      function doCycle() {
+        if (!numSpan.isConnected) return;
+        reset();
+
+        // 1) Count-up: linear 1→target, suffix added only at the end
+        const dur = target * 90; // ~90ms per step → medium readable pace
+        const t0 = performance.now();
+        const tick = (now) => {
+          if (!numSpan.isConnected) return;
+          const p = Math.min((now - t0) / dur, 1);
+          const val = Math.max(1, Math.round(p * target)); // linear, start at 1
+          if (p < 1) {
+            numSpan.textContent = val;           // no suffix while counting
+            requestAnimationFrame(tick);
+          } else {
+            numSpan.textContent = target + valSuffix; // add suffix only on arrival
+          }
+        };
+        requestAnimationFrame(tick);
+
+        // 2) Label fades in + matrix reveal
+        setTimeout(() => {
+          if (!labelEl.isConnected) return;
+          labelEl.style.transition = 'opacity .7s ease'; labelEl.style.opacity = '1';
+          matrixReveal(labelEl, 80);
+        }, 500);
+
+        // 3) Bullets slide in one by one + matrix reveal
+        items.forEach((li, i) => {
+          setTimeout(() => {
+            if (!li.isConnected) return;
+            li.style.transition = 'opacity .5s ease, transform .6s cubic-bezier(.22,.68,0,1.2)';
+            li.style.opacity = '1'; li.style.transform = 'translateX(0)';
+            matrixReveal(li, 60);
+          }, 1900 + i * 900);
+        });
+
+        // 4) After all text settled → 8× red scan lines
+        const lastBullet = 1900 + items.length * 900;
+        const scanDelay = lastBullet + 900; // wait for matrix to finish
+        setTimeout(() => {
+          if (!numSpan.isConnected) return;
+          runScanLines(() => {
+            // 5) Fade everything out after scans done
+            if (!numSpan.isConnected) return;
+            [numSpan, labelEl, ...items].forEach(el => {
+              el.style.transition = 'opacity .55s ease, transform .55s ease';
+              el.style.opacity = '0';
+              if (items.includes(el)) el.style.transform = 'translateX(-22px)';
+            });
+            setTimeout(doCycle, 800);
+          });
+        }, scanDelay);
+      }
+      doCycle();
+    }
+
+    // ── Chart: draw once, loop only the projection counter ──
+    function runChartCycle(container, projText, chartPoints) {
+      const m = projText.match(/([+\-]?)(\d+(?:\.\d+)?)(.*)/);
+      const prefix = m ? m[1] : '', numVal = m ? parseFloat(m[2]) : 0, suffix = m ? m[3] : '';
+
+      // Draw chart once — it stays permanently
+      container.style.opacity = '1';
+      container.innerHTML = buildLineChart(projText, chartPoints);
+
+      const projEl = container.querySelector('.chart-projection');
+      const numSpan = projEl && projEl.querySelector('.proj-num');
+      if (!numSpan) return;
+
+      // Smooth projection sync — number counts continuously as ball rises
+      // Ball: begin="2s", dur="10s"
+      // keyTimes: 0,0.08,0.23,0.31,0.46,0.54,0.69,0.77,0.92,1
+      // PAUSE=800ms at each point, MOVE=1500ms between points
+      const PAUSE = 800, MOVE = 1500;
+      const pts = chartPoints && chartPoints.length === 5 ? chartPoints : [12, 24, 36, 42, 45];
+      // Departure offsets (ms) within each 10s ball cycle
+      const departs = [800, 3100, 5400, 7700];   // leave pt1,pt2,pt3,pt4
+      // Arrival offsets (ms) within each 10s ball cycle
+      const arrives = [0, 2300, 4600, 6900, 9200]; // arrive pt1–pt5
+
+      projEl.style.transition = ''; projEl.style.opacity = '0';
+
+      function easeIO(t) {
+        return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+      }
+
+      function countSmooth(from, to, dur, onDone) {
+        if (!numSpan.isConnected) return;
+        const t0 = performance.now();
+        const tick = (now) => {
+          if (!numSpan.isConnected) return;
+          const p = Math.min((now - t0) / dur, 1);
+          const v = Math.round(from + (to - from) * easeIO(p));
+          projEl.style.opacity = '1';
+          numSpan.textContent = prefix + v + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+          else if (onDone) onDone();
+        };
+        requestAnimationFrame(tick);
+      }
+
+      function countLinear(to, dur) {
+        if (!numSpan.isConnected) return;
+        const t0 = performance.now();
+        const tick = (now) => {
+          if (!numSpan.isConnected) return;
+          const p = Math.min((now - t0) / dur, 1);
+          const v = Math.max(1, Math.round(p * to));
+          projEl.style.transition = 'opacity .4s ease'; projEl.style.opacity = '1';
+          numSpan.textContent = prefix + v + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+
+      function flashVal(v) {
+        if (!numSpan.isConnected) return;
+        projEl.style.transition = 'opacity .4s ease'; projEl.style.opacity = '1';
+        numSpan.textContent = prefix + v + suffix;
+      }
+
+      function scheduleCycle(offsetMs) {
+        if (!numSpan.isConnected) return;
+        // First arrival: linear count 1→12 over the pause period
+        setTimeout(() => countLinear(pts[0], PAUSE), offsetMs + arrives[0]);
+        // Subsequent arrivals: just lock the value (countSmooth already ends there)
+        for (let i = 1; i < arrives.length; i++) {
+          const v = pts[i];
+          setTimeout(() => flashVal(v), offsetMs + arrives[i]);
+        }
+        // Smooth count during each movement segment
+        departs.forEach((t, i) => setTimeout(() => countSmooth(pts[i], pts[i+1], MOVE), offsetMs + t));
+        setTimeout(() => scheduleCycle(0), offsetMs + 10000);
+      }
+
+      scheduleCycle(2000); // first ball cycle starts at begin="2s"
+    }
+
+    // ── Render Level 1 ────────────────────────────────
+    function renderLevel1(kpi) {
+      const l1 = kpi.level1;
+      const headerEl = document.getElementById('l1Header');
+      headerEl.textContent = l1.title;
+      matrixReveal(headerEl, 80);
+
+      const unitHTML = kpi.unit ? `<span class="l1-kpi-unit"> ${kpi.unit}</span>` : '';
+      const bullets = [];
+      if (l1.industries)       bullets.push(`<strong>Industries:</strong> ${l1.industries.join(', ')}`);
+      if (l1.focusAreas)       bullets.push(`<strong>Focus Areas:</strong> ${l1.focusAreas.join(', ')}`);
+      if (l1.investmentFocus)  bullets.push(`<strong>Investment Focus:</strong> ${l1.investmentFocus.join(', ')}`);
+      if (l1.regionalImpact)   bullets.push(`<strong>Regional Impact:</strong> ${l1.regionalImpact}`);
+      if (l1.growthProjection) bullets.push(`Cre\u0219tere cu <strong>${l1.growthProjection}</strong> \xeen cifra de afaceri`);
+      document.getElementById('l1Left').innerHTML = `
+        <div class="l1-kpi-big"><span class="kpi-num">${kpi.value}</span>${unitHTML}</div>
+        <div class="l1-kpi-label">${kpi.label}</div>
+        <ul class="l1-bullets">${bullets.map(b => `<li><span>${b}</span></li>`).join('')}</ul>`;
+
+      const numSpan  = document.querySelector('#l1Left .kpi-num');
+      const labelEl  = document.querySelector('#l1Left .l1-kpi-label');
+      const bulletsUl = document.querySelector('#l1Left .l1-bullets');
+      if (numSpan && labelEl && bulletsUl) runL1Cycle(numSpan, kpi.value, labelEl, bulletsUl);
+
+      runChartCycle(document.getElementById('l1Right'), l1.growthProjection || '+45%', l1.chartPoints);
+    }
+
+    // ── L2 Matrix PowerPoint cycle ────────────────────
+    function runL2Cycle(bodyEl) {
+      const items = Array.from(bodyEl.querySelectorAll('.impact-item'));
+      const SCAN_MS = 4000;  // must match l2Scan animation duration
+      const SCAN_PASSES = 3;
+      const SCAN_WAIT = SCAN_MS * SCAN_PASSES; // 12 000 ms
+
+      let firstTime = true;
+
+      // Start hidden so first matrix reveal is visible as an entrance
+      items.forEach(it => {
+        it.style.transition = '';
+        it.style.opacity = '0';
+        it.style.transform = 'translateY(26px) scale(.96)';
+      });
+
+      function doMatrixAndLoop() {
+        if (!bodyEl.isConnected) return;
+
+        const isFirst = firstTime;
+        firstTime = false;
+
+        items.forEach((item, i) => {
+          setTimeout(() => {
+            if (!item.isConnected) return;
+            // First time: slide in while matrix plays
+            if (isFirst) {
+              item.style.transition = 'opacity .65s ease, transform .7s cubic-bezier(.22,.68,0,1.2)';
+              item.style.opacity = '1';
+              item.style.transform = 'translateY(0) scale(1)';
+            }
+            item.querySelectorAll('h3, .impact-value, p, li').forEach((el, j) => {
+              matrixReveal(el, j * 110);
+            });
+          }, i * 800);
+        });
+
+        // After matrix finishes, scan 3 times, then matrix again
+        const matrixDone = items.length * 800 + 1200;
+        setTimeout(() => {
+          if (!bodyEl.isConnected) return;
+          setTimeout(doMatrixAndLoop, SCAN_WAIT);
+        }, matrixDone);
+      }
+
+      // Matrix plays immediately on first open
+      doMatrixAndLoop();
+    }
+
+    // ── Render Level 2 ────────────────────────────────
+    function renderLevel2(kpi) {
+      const l2 = kpi.level2;
+      document.getElementById('l2Header').textContent = l2.title;
+      const item = (title, body) =>
+        `<div class="impact-item"><div class="impact-arrow">▶</div><div class="impact-content"><h3>${title}</h3>${body}</div></div>`;
+      const list = items =>
+        `<ul class="impact-subitems">${items.map(b=>`<li>${b}</li>`).join('')}</ul>`;
+      const rows = [];
+      if (l2.jobsCreated)         rows.push(item('New Jobs Created',   `<div class="impact-value">${l2.jobsCreated}</div>`));
+      if (l2.entrepreneurStories) rows.push(item('Entrepreneur Stories',`<p>${l2.entrepreneurStories}</p>`));
+      if (l2.communityBenefits)   rows.push(item('Community Benefits', list(l2.communityBenefits)));
+      if (l2.citizenBenefits)     rows.push(item('Citizen Benefits',   list(l2.citizenBenefits)));
+      if (l2.innovationImpact)    rows.push(item('Innovation Impact',  `<p>${l2.innovationImpact}</p>`));
+      if (l2.regionalGrowth)      rows.push(item('Regional Growth',    `<div class="impact-value">${l2.regionalGrowth}</div>`));
+      if (l2.longTermImpact)      rows.push(item('Long Term Impact',   `<p>${l2.longTermImpact}</p>`));
+      const l2Body = document.getElementById('l2Body');
+      l2Body.innerHTML = rows.join('');
+      runL2Cycle(l2Body);
+    }
+
+    // ── postMessage ───────────────────────────────────
+    window.addEventListener('message', ({ data }) => {
+      if (!data?.type) return;
+      if (data.type === 'PING') {
+        if (!killed) window.parent.postMessage({ type:'PONG', target:'SHELL', payload:{ app:'KPI_APP', ts:Date.now() } }, '*');
         return;
       }
-
-      console.log('[KPI App] Message received:', data);
-
-      if (data.type === 'DATA_UPDATE' && data.target === 'KPI_APP') {
-        setStatus(`📨 Shell says: ${JSON.stringify(data.payload)}`);
-      }
+      if (data.type === 'KILL') { killed = true; document.body.style.opacity='.4'; document.body.style.pointerEvents='none'; return; }
+      if (data.type === 'DATA_UPDATE' && data.target === 'KPI_APP') console.log('[KPI App] DATA_UPDATE:', data.payload);
     });
 
-    // ─────────────────────────────────────────────
-    //  Crash simulation
-    // ─────────────────────────────────────────────
     function simulateCrash() {
-      setStatus('💥 Crashing… (reloading page)');
-
-      // Notify the shell before reloading
-      window.parent.postMessage(
-        { type: 'CRASH_SIMULATION', target: 'SHELL', payload: { app: 'KPI_APP' } },
-        '*',
-      );
-
+      window.parent.postMessage({ type:'CRASH_SIMULATION', target:'SHELL', payload:{ app:'KPI_APP' } }, '*');
       setTimeout(() => location.reload(), 300);
     }
 
-    // ─────────────────────────────────────────────
-    //  Helpers
-    // ─────────────────────────────────────────────
-    function setStatus(text) {
-      document.getElementById('status').textContent = text;
-    }
+    // ── Fallback data ─────────────────────────────────
+    const FALLBACK = { kpis:[
+      { id:'smes', value:94, label:'IMM-uri sprijinite',
+        level1:{ title:'Supporting 94 SMEs', industries:['Tech','Manufacturing','Agri'], regionalImpact:'+1500 locuri de muncă', growthProjection:'+45%' },
+        level2:{ title:'Human Impact Summary', jobsCreated:'1,500+ locuri de muncă', entrepreneurStories:'Transformarea afacerilor locale prin tehnologie și inovare.', communityBenefits:['Educație și formare pentru tineri','Creșterea calității vieții în regiune'] }},
+      { id:'institutions', value:22, label:'Instituții Publice',
+        level1:{ title:'Public Institutions Engagement', focusAreas:['Digital Services','Smart Administration','Innovation Partnerships'], regionalImpact:'Accelerarea digitalizării', growthProjection:'+38%', chartPoints:[12,20,28,32,38] },
+        level2:{ title:'Societal Impact', citizenBenefits:['Servicii publice mai rapide','Acces digital la administrație','Procese simplificate'], innovationImpact:'Crearea unui model regional de transformare digitală.' }},
+      { id:'funding', value:'21M', unit:'EUR', label:'Finanțări',
+        level1:{ title:'Regional Funding Overview', investmentFocus:['Digital Transformation','Smart Industry','AI & Data'], regionalImpact:'Avg 223K EUR per SME', growthProjection:'+45%' },
+        level2:{ title:'Economic Impact', regionalGrowth:'+45% creștere estimată', longTermImpact:'Consolidarea ecosistemului regional de inovare și antreprenoriat.' }},
+    ]};
   </script>
 </body>
 </html>

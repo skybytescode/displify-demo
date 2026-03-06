@@ -94,6 +94,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── Layout state ──────────────────────────────
   currentLayout: LayoutState = 'overview';
 
+  // ── Signage mode ──────────────────────────────
+  isSignageMode = false;
+
+  // ── Fullscreen ────────────────────────────────
+  isFullscreen = false;
+
+  // ── Shell visibility ──────────────────────────
+  isShellVisible = true;
+
   // ── Sanitized iframe URLs ─────────────────────
   kpiAppUrl!: SafeResourceUrl;
   aiAppUrl!: SafeResourceUrl;
@@ -132,10 +141,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
   //  Lifecycle
   // ─────────────────────────────────────────────
 
+  private readonly onFullscreenChange = (): void => {
+    this.zone.run(() => {
+      this.isFullscreen = !!document.fullscreenElement;
+    });
+  };
+
   ngOnInit(): void {
-    this.kpiAppUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-      'assets/kpi-app.html',
-    );
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
+
+    // ── Read URL params ──────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const modeParam       = params.get('mode');
+    const shellParam      = params.get('shell');
+    const fullscreenParam = params.get('fullscreen');
+    const intervalParam   = params.get('interval');
+
+    // Apply shell visibility
+    if (shellParam === 'off') {
+      this.isShellVisible = false;
+    }
+
+    // Apply signage mode
+    if (modeParam === 'signage') {
+      this.isSignageMode = true;
+    }
+
+    // Apply fullscreen (must be triggered after a user gesture; attempt on load)
+    if (fullscreenParam === 'true') {
+      document.documentElement.requestFullscreen().then(() => {
+        this.isFullscreen = true;
+      }).catch(() => { /* browser may block auto-fullscreen without gesture */ });
+    }
+
+    // Build KPI URL with mode and interval params if signage is active
+    const kpiUrl = this.isSignageMode
+      ? `assets/kpi-app.html?mode=signage${intervalParam ? '&interval=' + intervalParam : ''}`
+      : 'assets/kpi-app.html';
+    this.kpiAppUrl = this.sanitizer.bypassSecurityTrustResourceUrl(kpiUrl);
     this.aiAppUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
       'assets/ai-app.html',
     );
@@ -160,8 +203,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.postMessageService.appStatus$.subscribe(({ id, status }) => {
         this.zone.run(() => {
-          if (id === 'KPI_APP') { this.kpiStatus = status; }
-          if (id === 'AI_APP')  { this.aiStatus = status; }
+          if (id === 'KPI_APP') {
+            this.kpiStatus = status;
+            if (status === 'crashed' || status === 'recovering') { this.kpiIframeReady = false; }
+          }
+          if (id === 'AI_APP') {
+            this.aiStatus = status;
+            if (status === 'crashed' || status === 'recovering') { this.aiIframeReady = false; }
+          }
         });
       }),
     );
@@ -180,6 +229,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
     this.subscriptions.forEach((s) => s.unsubscribe());
     this.postMessageService.unregisterIframe('KPI_APP');
     this.postMessageService.unregisterIframe('AI_APP');
@@ -270,5 +320,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   killApp(iframeId: string): void {
     this.postMessageService.killApp(iframeId);
+  }
+
+  // ─────────────────────────────────────────────
+  //  Signage mode toggle
+  // ─────────────────────────────────────────────
+
+  toggleSignageMode(): void {
+    this.isSignageMode = !this.isSignageMode;
+    const interval = new URLSearchParams(window.location.search).get('interval');
+    const url = this.isSignageMode
+      ? `assets/kpi-app.html?mode=signage${interval ? '&interval=' + interval : ''}`
+      : 'assets/kpi-app.html';
+    this.kpiAppUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.kpiIframeReady = false;
+  }
+
+  // ─────────────────────────────────────────────
+  //  Fullscreen toggle
+  // ─────────────────────────────────────────────
+
+  toggleFullscreen(): void {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+    // isFullscreen is updated by the 'fullscreenchange' event listener
+  }
+
+  // ─────────────────────────────────────────────
+  //  Shell visibility toggle
+  // ─────────────────────────────────────────────
+
+  toggleShell(): void {
+    this.isShellVisible = !this.isShellVisible;
   }
 }

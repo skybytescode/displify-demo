@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 24px;
-  background: #1e1e2f;
+  background: #0c1117;
   color: #ffffff;
   z-index: 20;
   position: relative;
@@ -151,6 +151,108 @@
   100% { opacity: 1; }
 }
 
+// ── Hide / restore shell buttons ───────────────
+
+.btn-hide-shell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.btn-shell-restore {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 999;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(12, 17, 23, 0.85);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 200ms ease, color 200ms ease;
+
+  &:hover {
+    background: rgba(12, 17, 23, 0.98);
+    color: #ffffff;
+  }
+}
+
+// Grid fills full viewport when shell is hidden
+.dashboard-grid.shell-hidden {
+  height: 100vh;
+}
+
+// ── Signage mode button ────────────────────────
+
+.btn-signage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.8);
+  }
+
+  &--active {
+    background: rgba(99, 102, 241, 0.3);
+    border-color: rgba(99, 102, 241, 0.9);
+    color: #e0e7ff;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+  }
+}
+
+// ── Fullscreen button ──────────────────────────
+
+.btn-fullscreen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
 // ── Kill button ────────────────────────────────
 
 .btn-kill {
@@ -234,12 +336,51 @@
   .ai-panel  { flex: 0 0 0%; opacity: 0; transform: translateX(60px); }
 }
 
+// ── Portrait layout – stack vertically ─────────
+
+@media (orientation: portrait) {
+  .shell-toolbar {
+    padding: 8px 16px;
+
+    .toolbar-actions {
+      gap: 8px;
+    }
+
+    // Hide non-essential toolbar items to save vertical space
+    .btn-kill,
+    .toolbar-divider:nth-child(4),
+    .toolbar-divider:nth-child(6) {
+      display: none;
+    }
+  }
+
+  .dashboard-grid {
+    flex-direction: column;
+    height: calc(100vh - 48px);
+  }
+
+  .layout-overview {
+    .kpi-panel { flex: 1 1 65%; }
+    .ai-panel  { flex: 1 1 35%; opacity: 1; transform: translateY(0); }
+  }
+
+  .layout-focus {
+    .kpi-panel { flex: 1 1 100%; }
+    .ai-panel  { flex: 0 0 0%; opacity: 0; transform: translateY(40px); }
+  }
+
+  .kpi-panel {
+    border-right: none;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+  }
+}
+
 // ── Iframe panels ──────────────────────────────
 
 .iframe-wrapper {
   position: relative;
   overflow: hidden;
-  background: #ffffff;
+  background: #06060f;
   display: flex;
   flex-direction: column;
   // Neon border (controlled by @neonPulse animation trigger)
@@ -249,7 +390,7 @@
 }
 
 .kpi-panel {
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid rgba(99, 102, 241, 0.25);
 }
 
 .ai-panel {
@@ -263,17 +404,27 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: #0c1117;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
   font-size: 0.75rem;
-  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.2px;
   flex-shrink: 0;
 }
 
 .panel-title {
-  font-weight: 600;
+  font-weight: 700;
+  background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2fa0, #00d4ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: panelTitleGrad 5s linear infinite;
+}
+
+@keyframes panelTitleGrad {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .micro-app-frame {

@@ -70,9 +70,10 @@ export class PostMessageService implements OnDestroy {
   private readonly PING_INTERVAL_MS = 5_000;
 
   /** Number of missed PONGs before marking an iframe as offline. */
-  private readonly MAX_MISSED_PINGS = 2;
+  private readonly MAX_MISSED_PINGS = 4;
 
   private readonly allowedOrigins: string[] = [
+    window.location.origin,
     'http://localhost:4200',
     'http://localhost:4201',
     'http://localhost:4202',
@@ -223,6 +224,12 @@ export class PostMessageService implements OnDestroy {
       record.missedPings++;
 
       if (record.missedPings >= this.MAX_MISSED_PINGS && record.status !== 'offline') {
+        // Skip if the browser tab is hidden — throttled timers cause false positives.
+        if (document.hidden) {
+          record.missedPings = 0;
+          return;
+        }
+
         // ── Iframe is unresponsive ──
         record.status = 'offline';
         console.error(`[Broker] 💀 ${id} missed ${record.missedPings} PINGs — marking OFFLINE`);
