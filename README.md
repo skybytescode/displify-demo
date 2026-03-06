@@ -13,6 +13,7 @@
 5. [Security Matrix](#5-security-matrix)
 6. [Layout Engine](#6-layout-engine)
 7. [Setup & Deployment](#7-setup--deployment)
+   - [7.1 URL Parameters](#71-url-parameters)
 8. [Troubleshooting](#8-troubleshooting)
 
 ---
@@ -434,7 +435,32 @@ Timing: `idle → active` in 150ms, `active → idle` in 400ms. The source panel
 
 ## 7. Setup & Deployment
 
-### 7.1 Prerequisites
+### 7.1 URL Parameters
+
+The shell supports query parameters to control display mode, toolbar visibility, and signage timing without any code changes.
+
+| Parameter | Values | Default | Description |
+|---|---|---|---|
+| `mode` | `signage` | *(none)* | Enables autoplay signage mode — KPI app cycles through all levels automatically |
+| `shell` | `on` / `off` | `on` | Shows or hides the top toolbar |
+| `interval` | any number (seconds) | `8` | Duration each signage slide is displayed before advancing |
+
+#### Quick Reference
+
+| URL | Behaviour |
+|---|---|
+| `localhost:4200` | Normal interactive mode |
+| `localhost:4200?mode=signage` | Autoplay starts, controls still visible |
+| `localhost:4200?shell=off` | Toolbar hidden |
+| `localhost:4200?mode=signage&shell=off` | Autoplay + no toolbar |
+| `localhost:4200?shell=on` | Toolbar explicitly shown (same as default) |
+| `localhost:4200/?mode=signage&shell=off&interval=5` | Autoplay, no toolbar, 5-second slide interval |
+
+> Parameters can be combined freely. `interval` only has effect when `mode=signage` is active.
+
+---
+
+### 7.2 Prerequisites
 
 - **Node.js** ≥ 18.x
 - **npm** ≥ 9.x
