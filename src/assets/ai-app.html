@@ -336,6 +336,7 @@
       color: #fff;
       cursor: pointer;
       transition: background 200ms;
+      display: none;
     }
 
     .btn-crash:hover { background: rgba(220,38,38,.75); }
@@ -703,6 +704,12 @@
       killed = true;
       document.body.style.opacity = '.4';
       document.body.style.pointerEvents = 'none';
+      return;
+    }
+
+    if (data.type === 'TOGGLE_CRASH_BTN') {
+      const btn = document.querySelector('.btn-crash');
+      if (btn) btn.style.display = data.payload?.visible ? 'inline-block' : 'none';
       return;
     }
 

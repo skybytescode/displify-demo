@@ -11,7 +11,8 @@ export interface IframeMessage {
     | 'CRASH_SIMULATION'
     | 'PING'
     | 'PONG'
-    | 'KILL';
+    | 'KILL'
+    | 'TOGGLE_CRASH_BTN';
 
   /** Routing: who should act on this message. */
   target: 'SHELL' | 'KPI_APP' | 'AI_APP';

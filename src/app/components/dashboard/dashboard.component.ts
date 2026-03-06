@@ -103,6 +103,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── Shell visibility ──────────────────────────
   isShellVisible = true;
 
+  // ── Crash controls visibility ─────────────────
+  showCrashControls = false;
+
   // ── Sanitized iframe URLs ─────────────────────
   kpiAppUrl!: SafeResourceUrl;
   aiAppUrl!: SafeResourceUrl;
@@ -320,6 +323,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   killApp(iframeId: string): void {
     this.postMessageService.killApp(iframeId);
+  }
+
+  toggleCrashControls(): void {
+    this.showCrashControls = !this.showCrashControls;
+    const msg = { type: 'TOGGLE_CRASH_BTN' as const, payload: { visible: this.showCrashControls } };
+    this.postMessageService.sendMessageTo('KPI_APP', { ...msg, target: 'KPI_APP' });
+    this.postMessageService.sendMessageTo('AI_APP',  { ...msg, target: 'AI_APP'  });
   }
 
   // ─────────────────────────────────────────────

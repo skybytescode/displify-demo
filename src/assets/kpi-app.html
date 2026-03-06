@@ -32,6 +32,7 @@
       padding: 5px 14px; font-size: .72rem; font-weight: 600;
       border: none; border-radius: 6px; background: rgba(239,68,68,.65);
       color: #fff; cursor: pointer; transition: background 200ms;
+      display: none;
     }
     .btn-crash:hover { background: rgba(220,38,38,.9); }
 
@@ -1207,6 +1208,10 @@
       }
       if (data.type === 'KILL') { killed = true; document.body.style.opacity='.4'; document.body.style.pointerEvents='none'; return; }
       if (data.type === 'DATA_UPDATE' && data.target === 'KPI_APP') console.log('[KPI App] DATA_UPDATE:', data.payload);
+      if (data.type === 'TOGGLE_CRASH_BTN') {
+        const btn = document.querySelector('.btn-crash');
+        if (btn) btn.style.display = data.payload.visible ? 'inline-block' : 'none';
+      }
     });
 
     function simulateCrash() {

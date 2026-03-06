@@ -68,42 +68,54 @@
 
     <span class="toolbar-divider"></span>
 
-    <!-- Kill button -->
+    <!-- Crash controls toggle -->
     <button
-      class="btn-kill"
-      (click)="killApp('KPI_APP')"
-      title="Send KILL signal — KPI App will freeze (while true)">
-      ☠️ Kill KPI App
+      class="btn-crash-toggle"
+      (click)="toggleCrashControls()"
+      [title]="showCrashControls ? 'Hide crash controls' : 'Show crash controls'">
+      {{ showCrashControls ? '−' : '+' }} Crash
     </button>
 
-    <span class="toolbar-divider"></span>
+    <ng-container *ngIf="showCrashControls">
+      <span class="toolbar-divider"></span>
 
-    <!-- Crash simulation buttons with status dots -->
-    <button
-      class="btn-restart"
-      (click)="restartApp('KPI_APP')"
-      title="Simulate crash & recovery for KPI App">
-      <span class="status-dot"
-            [ngClass]="{
-              'dot-healthy':    kpiStatus === 'healthy',
-              'dot-crashed':    kpiStatus === 'crashed',
-              'dot-recovering': kpiStatus === 'recovering'
-            }"></span>
-      KPI
-    </button>
+      <!-- Kill button -->
+      <button
+        class="btn-kill"
+        (click)="killApp('KPI_APP')"
+        title="Send KILL signal — KPI App will freeze (while true)">
+        ☠️ Kill KPI App
+      </button>
 
-    <button
-      class="btn-restart"
-      (click)="restartApp('AI_APP')"
-      title="Simulate crash & recovery for AI App">
-      <span class="status-dot"
-            [ngClass]="{
-              'dot-healthy':    aiStatus === 'healthy',
-              'dot-crashed':    aiStatus === 'crashed',
-              'dot-recovering': aiStatus === 'recovering'
-            }"></span>
-      AI
-    </button>
+      <span class="toolbar-divider"></span>
+
+      <!-- Crash simulation buttons with status dots -->
+      <button
+        class="btn-restart"
+        (click)="restartApp('KPI_APP')"
+        title="Simulate crash & recovery for KPI App">
+        <span class="status-dot"
+              [ngClass]="{
+                'dot-healthy':    kpiStatus === 'healthy',
+                'dot-crashed':    kpiStatus === 'crashed',
+                'dot-recovering': kpiStatus === 'recovering'
+              }"></span>
+        KPI
+      </button>
+
+      <button
+        class="btn-restart"
+        (click)="restartApp('AI_APP')"
+        title="Simulate crash & recovery for AI App">
+        <span class="status-dot"
+              [ngClass]="{
+                'dot-healthy':    aiStatus === 'healthy',
+                'dot-crashed':    aiStatus === 'crashed',
+                'dot-recovering': aiStatus === 'recovering'
+              }"></span>
+        AI
+      </button>
+    </ng-container>
 
     <span class="toolbar-divider"></span>
 
